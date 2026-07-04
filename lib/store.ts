@@ -57,6 +57,7 @@ export function useAppData() {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(KEY);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setData(raw ? { ...DEFAULT_DATA, ...JSON.parse(raw) } : DEFAULT_DATA);
     } catch {
       setData(DEFAULT_DATA);
