@@ -5,6 +5,7 @@ const basePath = process.env.GITHUB_ACTIONS ? "/Sunday-School" : "";
 
 const nextConfig: NextConfig = {
   output: "export",
+  trailingSlash: true,
   basePath,
   env: {
     // Plain <img>/<a> URLs don't get basePath automatically — components
