@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#006184"/>
+  <!-- star -->
+  <path d="M256 136 L267 174 L305 185 L267 196 L256 234 L245 196 L207 185 L245 174 Z" fill="#d9b64f"/>
+  <!-- open book -->
+  <path d="M80 316 Q172 280 248 302 L248 408 Q172 386 80 414 Z" fill="#ffffff"/>
+  <path d="M432 316 Q340 280 264 302 L264 408 Q340 386 432 414 Z" fill="#ffffff"/>
+  <rect x="250" y="298" width="12" height="114" rx="4" fill="#d9b64f"/>
+  <!-- page lines -->
+  <path d="M112 330 Q176 308 232 320 M112 352 Q176 330 232 342 M112 374 Q176 352 232 364" stroke="#c7d9e2" stroke-width="7" fill="none" stroke-linecap="round"/>
+  <path d="M400 330 Q336 308 280 320 M400 352 Q336 330 280 342 M400 374 Q336 352 280 364" stroke="#c7d9e2" stroke-width="7" fill="none" stroke-linecap="round"/>
+</svg>

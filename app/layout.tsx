@@ -32,6 +32,10 @@ export const metadata: Metadata = {
     "Ward Sunday School presidency tool — teachers, classes, substitutes, and the 2026 Come, Follow Me schedule.",
 };
 
+export const viewport = {
+  themeColor: "#006184",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
