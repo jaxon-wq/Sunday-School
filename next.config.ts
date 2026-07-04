@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
   output: "export",
   trailingSlash: true,
   basePath,
+  // Deterministic, underscore-free build id (Pages-safe and reproducible)
+  generateBuildId: async () =>
+    process.env.GITHUB_SHA ? `b${process.env.GITHUB_SHA.slice(0, 12)}` : "dev",
   env: {
     // Plain <img>/<a> URLs don't get basePath automatically — components
     // that reference /public assets prefix with this.
