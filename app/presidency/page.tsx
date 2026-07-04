@@ -3,10 +3,15 @@
 import { useState } from "react";
 import { LESSONS, formatSunday, parseISODate } from "@/lib/lessons";
 import {
+  CARE_THRESHOLD,
+  CARE_WATCH,
   ChecklistItem,
   PRESIDENCY_ROLES,
   PresidencyRole,
   isTeachingSunday,
+  offerBreakMessage,
+  smsHref,
+  teacherLoads,
   todayStart,
   uid,
   useAppData,
@@ -249,6 +254,85 @@ export default function PresidencyPage() {
           The checklist resets automatically each teaching Sunday. Checked items
           are saved per date.
         </p>
+      </section>
+
+      {/* Teacher care */}
+      <section>
+        <h2 className="mb-1 font-serif text-xl font-bold">Teacher care</h2>
+        <p className="mb-3 text-sm text-ink-2">
+          Under the weekly schedule a faithful teacher can quietly carry too
+          much. These counts exist so a person gets noticed — not as a
+          scoreboard.
+        </p>
+        {(() => {
+          const loads = teacherLoads(data!).filter(
+            (l) =>
+              data!.classes.some((c) => c.teacherIds.includes(l.teacher.id)) ||
+              l.taughtOfLast8 > 0
+          );
+          if (loads.length === 0)
+            return (
+              <p className="text-sm text-ink-3">
+                Add teachers and classes to see teaching load here.
+              </p>
+            );
+          return (
+            <div className="overflow-hidden rounded-lg border border-line bg-white">
+              {loads.map((l, i) => {
+                const effective = l.streak + (l.scheduledNext ? 1 : 0);
+                const tier =
+                  effective >= CARE_THRESHOLD
+                    ? "bg-warn-soft text-warn"
+                    : effective >= CARE_WATCH
+                      ? "bg-primary-soft text-primary-dark"
+                      : "bg-surface-2 text-ink-2";
+                return (
+                  <div
+                    key={l.teacher.id}
+                    className={`flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 ${
+                      i > 0 ? "border-t border-line" : ""
+                    }`}
+                  >
+                    <span className="min-w-32 font-semibold">
+                      {l.teacher.name}
+                      {l.teacher.substitute && (
+                        <span className="ml-2 rounded bg-primary-soft px-1.5 py-0.5 text-xs font-semibold text-primary">
+                          substitute
+                        </span>
+                      )}
+                    </span>
+                    <span
+                      className={`rounded px-2 py-0.5 text-xs font-semibold ${tier}`}
+                    >
+                      {effective === 0
+                        ? "not currently teaching"
+                        : `${effective} Sunday${effective === 1 ? "" : "s"} in a row`}
+                    </span>
+                    {l.scheduledNext && effective > 0 && (
+                      <span className="text-xs text-ink-3">
+                        including this coming Sunday
+                      </span>
+                    )}
+                    <span className="text-xs text-ink-3">
+                      · taught {l.taughtOfLast8} of the last 8
+                    </span>
+                    {l.teacher.phone && effective >= CARE_WATCH && (
+                      <a
+                        href={smsHref(
+                          l.teacher.phone,
+                          offerBreakMessage(l.teacher.name)
+                        )}
+                        className="ml-auto rounded-md border border-line-2 px-3 py-1 text-xs font-semibold text-primary hover:bg-primary-soft"
+                      >
+                        Offer a break
+                      </a>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
       </section>
 
       {/* Roles & responsibilities */}

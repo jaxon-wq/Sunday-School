@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { parseISODate, sundayOccurrence } from "./lessons";
+import { LESSONS, parseISODate, sundayOccurrence } from "./lessons";
 
 export type Teacher = {
   id: string;
@@ -226,6 +226,69 @@ export function subRequestMessage(opts: {
     `Hi ${firstName(opts.teacherName)}, could you cover the ${opts.className} class ` +
     `on ${opts.sundayLabel}? The lesson is ${opts.lessonRef} in Come, Follow Me. ` +
     `No pressure if you can't — just let me know either way. Thank you!${from}`
+  );
+}
+
+// ---- Teacher care (GOSPEL.md principle 6: names, not numbers) ----
+// A count of consecutive teaching Sundays exists so a person gets noticed
+// and offered a break — never as a scoreboard.
+
+export type TeacherLoad = {
+  teacher: Teacher;
+  // consecutive completed teaching Sundays taught, ending at the most recent
+  streak: number;
+  // assigned (or subbing) on the next teaching Sunday too
+  scheduledNext: boolean;
+  taughtOfLast8: number;
+  nextSunday?: string;
+};
+
+function taughtOn(data: AppData, sunday: string, teacherId: string): boolean {
+  return data.classes.some((c) => {
+    const ov = findOverride(data, sunday, c.id);
+    if (ov?.teacherId) return ov.teacherId === teacherId;
+    return c.teacherIds.includes(teacherId);
+  });
+}
+
+export function teacherLoads(data: AppData): TeacherLoad[] {
+  const { meetWeeks } = data.settings;
+  const sundays = LESSONS.map((l) => l.sunday).filter((s) =>
+    isTeachingSunday(s, meetWeeks)
+  );
+  const today = todayStart();
+  const past = sundays.filter((s) => parseISODate(s) < today);
+  const next = sundays.find((s) => parseISODate(s) >= today);
+
+  return data.teachers
+    .map((teacher) => {
+      let streak = 0;
+      for (let i = past.length - 1; i >= 0; i--) {
+        if (taughtOn(data, past[i], teacher.id)) streak++;
+        else break;
+      }
+      const taughtOfLast8 = past
+        .slice(-8)
+        .filter((s) => taughtOn(data, s, teacher.id)).length;
+      const scheduledNext = next ? taughtOn(data, next, teacher.id) : false;
+      return { teacher, streak, scheduledNext, taughtOfLast8, nextSunday: next };
+    })
+    .sort(
+      (a, b) =>
+        b.streak + (b.scheduledNext ? 1 : 0) -
+        (a.streak + (a.scheduledNext ? 1 : 0))
+    );
+}
+
+// Streak (including the upcoming Sunday) at which we gently suggest a break.
+export const CARE_THRESHOLD = 6;
+export const CARE_WATCH = 4;
+
+export function offerBreakMessage(teacherName: string): string {
+  return (
+    `Hi ${firstName(teacherName)}, thank you for teaching so faithfully week ` +
+    `after week — we see it, and we're grateful. Would you like a Sunday off ` +
+    `soon? We'd be glad to line up a substitute. Just say the word.`
   );
 }
 

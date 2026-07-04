@@ -4,9 +4,13 @@ import Link from "next/link";
 import LessonArt, { artworkFor } from "@/components/LessonArt";
 import { LESSONS, formatSunday, occurrenceLabel, parseISODate } from "@/lib/lessons";
 import {
+  CARE_THRESHOLD,
   NEW_SCHEDULE_START,
   effectiveTeacherLabel,
   isTeachingSunday,
+  offerBreakMessage,
+  smsHref,
+  teacherLoads,
   todayStart,
   uid,
   useAppData,
@@ -33,6 +37,9 @@ export default function Dashboard() {
   const comingUp = upcoming.slice(1, 11);
   const unstaffed = data.classes.filter((c) => c.teacherIds.length === 0);
   const nextArt = next ? artworkFor(next.week) : null;
+  const careAlert = teacherLoads(data).find(
+    (l) => l.streak + (l.scheduledNext ? 1 : 0) >= CARE_THRESHOLD
+  );
 
   function seedClasses() {
     update((d) => ({
@@ -82,6 +89,34 @@ export default function Dashboard() {
           <Link href="/teachers" className="font-semibold text-primary underline">
             assign teachers
           </Link>
+        </div>
+      )}
+
+      {careAlert && (
+        <div className="rounded-lg border border-primary/25 bg-primary-soft px-4 py-3 text-sm text-ink">
+          <span className="font-semibold text-primary-dark">Teacher care:</span>{" "}
+          {careAlert.teacher.name} has taught{" "}
+          {careAlert.streak + (careAlert.scheduledNext ? 1 : 0)} Sundays in a
+          row{careAlert.scheduledNext && ", including this coming Sunday"}.
+          Consider offering a break —{" "}
+          {careAlert.teacher.phone && (
+            <>
+              <a
+                href={smsHref(
+                  careAlert.teacher.phone,
+                  offerBreakMessage(careAlert.teacher.name)
+                )}
+                className="font-semibold text-primary underline"
+              >
+                send a kind text
+              </a>{" "}
+              or{" "}
+            </>
+          )}
+          <Link href="/presidency" className="font-semibold text-primary underline">
+            see teacher care
+          </Link>
+          .
         </div>
       )}
 
