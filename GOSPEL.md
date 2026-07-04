@@ -72,12 +72,16 @@ It is built for three recurring moments:
 ## Current decisions of record
 
 - **Sharing**: presidency of four. Until real sync exists, data moves by
-  export/import; sync is the next architectural frontier.
+  share/export/import (one-tap Web Share for AirDrop/Messages); a synced backend
+  is the next architectural frontier, adopted only when the manual dance hurts.
 - **Teachers stay outside the app**: sub requests and reminders go out as prefilled
   text messages from the presidency's phones.
-- **Real data**: to be populated from LCR when access arrives; until then the data
-  model mirrors LCR concepts (classes, teachers, callings) so import is natural.
-- **Attendance**: not yet built, by choice (see principle 6). To be scoped together.
+- **Real data**: to be populated from LCR when access arrives (paste-in importer is
+  ready); the data model mirrors LCR concepts so import is natural.
+- **Attendance** (decided July 2026): this tool records **headcounts only — numbers,
+  never names**. Named attendance rolls belong to Member Tools/LCR, the Church's
+  system of record; we do not duplicate them (principles 6, 7, 9). A "who needs
+  noticing" layer may come later, designed as carefully as this document was.
 
 ## The test
 

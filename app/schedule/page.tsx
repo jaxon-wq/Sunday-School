@@ -49,6 +49,19 @@ export default function SchedulePage() {
     });
   }
 
+  function setHeadcount(sunday: string, classId: string, raw: string) {
+    update((d) => {
+      const attendance = { ...d.attendance };
+      const day = { ...(attendance[sunday] ?? {}) };
+      const n = parseInt(raw, 10);
+      if (Number.isFinite(n) && n >= 0) day[classId] = n;
+      else delete day[classId];
+      if (Object.keys(day).length) attendance[sunday] = day;
+      else delete attendance[sunday];
+      return { ...d, attendance };
+    });
+  }
+
   function setWeekNote(sunday: string, note: string) {
     update((d) => {
       const weekNotes = { ...d.weekNotes };
@@ -294,6 +307,38 @@ export default function SchedulePage() {
                                 </div>
                               );
                             })}
+                          </div>
+                        )}
+                        {data.classes.length > 0 && (
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-ink-3">
+                              Headcount
+                            </span>
+                            {data.classes.map((cls) => (
+                              <label
+                                key={cls.id}
+                                className="flex items-center gap-1.5 text-ink-2"
+                              >
+                                {cls.name}
+                                <input
+                                  type="number"
+                                  min={0}
+                                  inputMode="numeric"
+                                  value={
+                                    data.attendance[lesson.sunday]?.[cls.id] ??
+                                    ""
+                                  }
+                                  onChange={(e) =>
+                                    setHeadcount(
+                                      lesson.sunday,
+                                      cls.id,
+                                      e.target.value
+                                    )
+                                  }
+                                  className="w-14 rounded-md border border-line px-2 py-1 text-center"
+                                />
+                              </label>
+                            ))}
                           </div>
                         )}
                         <input

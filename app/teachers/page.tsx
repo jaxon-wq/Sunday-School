@@ -1,7 +1,14 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { migrate, uid, useAppData } from "@/lib/store";
+import {
+  Candidate,
+  PIPELINE_STAGES,
+  migrate,
+  todayISO,
+  uid,
+  useAppData,
+} from "@/lib/store";
 
 const inputCls =
   "rounded-md border border-line px-3 py-1.5 text-sm placeholder:text-ink-3";
@@ -13,6 +20,11 @@ export default function TeachersPage() {
   const [tName, setTName] = useState("");
   const [tPhone, setTPhone] = useState("");
   const [tSub, setTSub] = useState(false);
+  const [cName, setCName] = useState("");
+  const [cPhone, setCPhone] = useState("");
+  const [cClass, setCClass] = useState("");
+  const [showPaste, setShowPaste] = useState(false);
+  const [pasteText, setPasteText] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   if (!data) return null;
 
@@ -101,6 +113,100 @@ export default function TeachersPage() {
     URL.revokeObjectURL(a.href);
   }
 
+  async function shareData() {
+    const file = new File(
+      [JSON.stringify(data, null, 2)],
+      "sunday-school-data.json",
+      { type: "application/json" }
+    );
+    try {
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: "Sunday School data" });
+        return;
+      }
+    } catch {
+      // fall through to download
+    }
+    exportData();
+  }
+
+  function importPasted() {
+    const rows = pasteText
+      .split("\n")
+      .map((line) => line.split(/\t|,/).map((s) => s.trim()))
+      .filter((parts) => parts[0]);
+    if (rows.length === 0) return;
+    update((d) => ({
+      ...d,
+      teachers: [
+        ...d.teachers,
+        ...rows.map(([name, phone]) => ({
+          id: uid(),
+          name,
+          phone: phone || undefined,
+        })),
+      ],
+    }));
+    setPasteText("");
+    setShowPaste(false);
+  }
+
+  function addCandidate(e: React.FormEvent) {
+    e.preventDefault();
+    const name = cName.trim();
+    if (!name) return;
+    const cand: Candidate = {
+      id: uid(),
+      name,
+      phone: cPhone.trim() || undefined,
+      classId: cClass || undefined,
+      stage: 0,
+      stageDates: [null, null, null, null, null],
+    };
+    update((d) => ({ ...d, candidates: [...d.candidates, cand] }));
+    setCName("");
+    setCPhone("");
+    setCClass("");
+  }
+
+  function advanceCandidate(id: string) {
+    update((d) => ({
+      ...d,
+      candidates: d.candidates.map((c) => {
+        if (c.id !== id || c.stage >= 5) return c;
+        const stageDates = [...c.stageDates];
+        stageDates[c.stage] = todayISO();
+        return { ...c, stage: c.stage + 1, stageDates };
+      }),
+    }));
+  }
+
+  function removeCandidate(id: string) {
+    update((d) => ({
+      ...d,
+      candidates: d.candidates.filter((c) => c.id !== id),
+    }));
+  }
+
+  function graduateCandidate(cand: Candidate) {
+    const newId = uid();
+    update((d) => ({
+      ...d,
+      candidates: d.candidates.filter((c) => c.id !== cand.id),
+      teachers: [
+        ...d.teachers,
+        { id: newId, name: cand.name, phone: cand.phone },
+      ],
+      classes: cand.classId
+        ? d.classes.map((c) =>
+            c.id === cand.classId
+              ? { ...c, teacherIds: [...c.teacherIds, newId] }
+              : c
+          )
+        : d.classes,
+    }));
+  }
+
   function importData(file: File) {
     file.text().then((text) => {
       try {
@@ -130,18 +236,30 @@ export default function TeachersPage() {
             Populate from LCR when you get access.
           </p>
         </div>
-        <div className="flex gap-2 text-sm">
+        <div className="flex flex-wrap gap-2 text-sm">
+          <button
+            onClick={shareData}
+            className="rounded-md bg-primary px-4 py-1.5 font-semibold text-white hover:bg-primary-dark"
+          >
+            Share with presidency
+          </button>
           <button
             onClick={exportData}
             className="rounded-md border border-line-2 bg-white px-4 py-1.5 font-semibold text-ink hover:bg-surface"
           >
-            Export data
+            Export
           </button>
           <button
             onClick={() => fileRef.current?.click()}
             className="rounded-md border border-line-2 bg-white px-4 py-1.5 font-semibold text-ink hover:bg-surface"
           >
             Import
+          </button>
+          <button
+            onClick={() => setShowPaste((v) => !v)}
+            className="rounded-md border border-line-2 bg-white px-4 py-1.5 font-semibold text-ink hover:bg-surface"
+          >
+            Paste list…
           </button>
           <input
             ref={fileRef}
@@ -156,6 +274,31 @@ export default function TeachersPage() {
           />
         </div>
       </div>
+
+      {showPaste && (
+        <div className="rounded-lg border border-line bg-surface p-4">
+          <p className="text-sm font-semibold">Paste a list of teachers</p>
+          <p className="mt-0.5 text-xs text-ink-2">
+            One per line, from LCR or a spreadsheet: <code>Name, phone</code>{" "}
+            (phone optional; commas or tabs both work).
+          </p>
+          <textarea
+            value={pasteText}
+            onChange={(e) => setPasteText(e.target.value)}
+            rows={5}
+            placeholder={"Sister Hale, 555-0102\nBrother Larsen\t555-0101"}
+            className="mt-2 w-full rounded-md border border-line bg-white px-3 py-2 font-mono text-sm placeholder:text-ink-3"
+          />
+          <button
+            onClick={importPasted}
+            className="mt-2 rounded-md bg-primary px-4 py-1.5 text-sm font-semibold text-white hover:bg-primary-dark"
+          >
+            Add{" "}
+            {pasteText.split("\n").filter((l) => l.trim()).length || ""}{" "}
+            teachers
+          </button>
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Classes */}
@@ -333,10 +476,125 @@ export default function TeachersPage() {
         </section>
       </div>
 
+      {/* New teacher pipeline */}
+      <section>
+        <h2 className="mb-1 font-serif text-xl font-bold">
+          New teacher pipeline
+        </h2>
+        <p className="mb-3 text-sm text-ink-2">
+          From recommendation to the classroom, so no one falls in the crack
+          between &quot;bishopric approved&quot; and &quot;nobody told them
+          where the manuals are.&quot;
+        </p>
+        <form
+          onSubmit={addCandidate}
+          className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-line bg-surface p-3"
+        >
+          <input
+            value={cName}
+            onChange={(e) => setCName(e.target.value)}
+            placeholder="Name to recommend"
+            className={`min-w-0 flex-1 bg-white ${inputCls}`}
+          />
+          <input
+            value={cPhone}
+            onChange={(e) => setCPhone(e.target.value)}
+            placeholder="Phone"
+            className={`w-32 bg-white ${inputCls}`}
+          />
+          <select
+            value={cClass}
+            onChange={(e) => setCClass(e.target.value)}
+            className="rounded-md border border-line bg-white px-2 py-1.5 text-sm text-ink-2"
+          >
+            <option value="">Class in mind…</option>
+            {data.classes.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+          <button
+            type="submit"
+            className="rounded-md bg-primary px-4 py-1.5 text-sm font-semibold text-white hover:bg-primary-dark"
+          >
+            Add
+          </button>
+        </form>
+
+        {data.candidates.length === 0 ? (
+          <p className="text-sm text-ink-3">
+            No one in process. When you recommend someone to the bishopric,
+            add them here.
+          </p>
+        ) : (
+          <div className="divide-y divide-line rounded-lg border border-line bg-white">
+            {data.candidates.map((cand) => {
+              const targetClass = data.classes.find(
+                (c) => c.id === cand.classId
+              );
+              return (
+                <div
+                  key={cand.id}
+                  className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3"
+                >
+                  <div className="min-w-40">
+                    <p className="font-semibold">{cand.name}</p>
+                    <p className="text-xs text-ink-3">
+                      {[cand.phone, targetClass?.name]
+                        .filter(Boolean)
+                        .join(" · ") || "No class assigned yet"}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {PIPELINE_STAGES.map((s, i) => (
+                      <span
+                        key={s}
+                        title={cand.stageDates[i] ?? undefined}
+                        className={`rounded px-2 py-0.5 text-xs font-semibold ${
+                          i < cand.stage
+                            ? "bg-primary text-white"
+                            : "bg-surface-2 text-ink-3"
+                        }`}
+                      >
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                  <span className="ml-auto flex items-center gap-2">
+                    {cand.stage < 5 ? (
+                      <button
+                        onClick={() => advanceCandidate(cand.id)}
+                        className="rounded-md border border-line-2 px-3 py-1 text-xs font-semibold text-primary hover:bg-primary-soft"
+                      >
+                        Mark {PIPELINE_STAGES[cand.stage].toLowerCase()}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => graduateCandidate(cand)}
+                        className="rounded-md bg-confirm px-3 py-1 text-xs font-semibold text-white hover:opacity-90"
+                      >
+                        Add as teacher{targetClass ? ` → ${targetClass.name}` : ""}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => removeCandidate(cand.id)}
+                      className="text-xs text-ink-3 hover:text-danger"
+                    >
+                      Remove
+                    </button>
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
       <p className="text-xs text-ink-3">
-        Data lives on this device and belongs to the ward — use Export to back
-        up or hand off, and Import on a counselor&apos;s device to share the
-        current setup.
+        Data lives on this device and belongs to the ward — use Share to send
+        it to a counselor (AirDrop or Messages), Export to back up, and Import
+        to load a file you&apos;ve been sent.
       </p>
     </div>
   );

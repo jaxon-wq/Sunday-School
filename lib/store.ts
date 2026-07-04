@@ -64,6 +64,34 @@ export const DEFAULT_CHECKLIST: ChecklistItem[] = [
   { id: "thank-teacher", label: "Sunday evening: thank one teacher by text", assignedTo: "President" },
 ];
 
+// A teacher council meeting (Handbook 13; Teaching in the Savior's Way)
+export type Council = {
+  id: string;
+  date: string; // ISO date
+  topic: string;
+  notes: string;
+  followUps: { id: string; text: string; done: boolean }[];
+};
+
+// New-teacher pipeline: recommend → called → sustained → set apart → oriented
+export const PIPELINE_STAGES = [
+  "Recommended",
+  "Called",
+  "Sustained",
+  "Set apart",
+  "Oriented",
+] as const;
+
+export type Candidate = {
+  id: string;
+  name: string;
+  phone?: string;
+  classId?: string;
+  stage: number; // number of completed stages (0–5)
+  stageDates: (string | null)[]; // ISO date each stage was completed
+  note?: string;
+};
+
 export type AppData = {
   teachers: Teacher[];
   classes: SSClass[];
@@ -74,6 +102,10 @@ export type AppData = {
   checklistItems: ChecklistItem[];
   // checklist completion state: sunday ISO -> itemId -> done
   checklist: Record<string, Record<string, boolean>>;
+  // headcounts only, never names: sunday ISO -> classId -> count
+  attendance: Record<string, Record<string, number>>;
+  councils: Council[];
+  candidates: Candidate[];
 };
 
 const KEY = "sunday-school-v1";
@@ -87,6 +119,9 @@ const DEFAULT_DATA: AppData = {
   presidency: PRESIDENCY_ROLES.map((role) => ({ role, name: "" })),
   checklistItems: DEFAULT_CHECKLIST,
   checklist: {},
+  attendance: {},
+  councils: [],
+  candidates: [],
 };
 
 export function uid(): string {
@@ -112,7 +147,15 @@ export function migrate(raw: unknown): AppData {
         : DEFAULT_CHECKLIST,
     checklist: d.checklist ?? {},
     weekNotes: d.weekNotes ?? {},
+    attendance: d.attendance ?? {},
+    councils: Array.isArray(d.councils) ? d.councils : [],
+    candidates: Array.isArray(d.candidates) ? d.candidates : [],
   };
+}
+
+export function todayISO(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 export function useAppData() {
