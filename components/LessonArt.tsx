@@ -289,18 +289,16 @@ export default function LessonArt({
   return (
     <div className={`relative overflow-hidden group select-none ${className || ""}`}>
       {/* Background/Loading state placeholder */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#121620] to-[#080a10] flex flex-col items-center justify-center p-2 text-center">
+      <div className="absolute inset-0 bg-gradient-to-br from-[#1c1710] to-[#0f0d0a] flex flex-col items-center justify-center p-2 text-center">
         {!loaded && !error && (
-          <div className="text-[9px] uppercase tracking-[0.15em] text-white/40 animate-pulse font-medium">
-            Gospel Art Loading...
-          </div>
+          <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#c9a24b]/50" />
         )}
         {error && (
           <div className="space-y-0.5">
-            <p className="text-[10px] font-bold text-white/80 line-clamp-2 leading-tight">
+            <p className="font-display text-[10px] font-semibold text-[#f2ecdd]/80 line-clamp-2 leading-tight">
               {artwork.title}
             </p>
-            <p className="text-[8px] text-white/50 leading-tight">
+            <p className="text-[8px] text-[#a2947a] leading-tight">
               {artwork.artist}
             </p>
           </div>
@@ -323,10 +321,10 @@ export default function LessonArt({
       {/* Elegant overlay showing painting details on hover */}
       {loaded && (
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-          <p className="text-[10px] font-bold text-white truncate leading-normal">
+          <p className="font-display text-[10px] font-semibold italic text-white truncate leading-normal">
             {artwork.title}
           </p>
-          <p className="text-[8px] text-gray-300 truncate leading-normal">
+          <p className="text-[8px] text-[#d8cdb4] truncate leading-normal">
             {artwork.artist}
           </p>
         </div>

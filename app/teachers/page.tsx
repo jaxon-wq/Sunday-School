@@ -97,10 +97,10 @@ export default function TeachersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-white">
+        <h1 className="font-display text-4xl font-semibold tracking-tight text-pp-text">
           Teachers &amp; Classes
         </h1>
-        <p className="mt-1 text-sm text-pp-muted">
+        <p className="mt-2 text-sm text-pp-muted">
           Set up your classes, add teachers, and assign who teaches what.
         </p>
       </div>
@@ -108,7 +108,7 @@ export default function TeachersPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Classes */}
         <section className="space-y-4">
-          <h2 className="font-bold text-white">Classes</h2>
+          <h2 className="font-display text-xl font-semibold text-pp-text">Classes</h2>
           <form
             onSubmit={addClass}
             className="flex flex-wrap gap-2 rounded-2xl border border-pp-border bg-pp-card p-3"
@@ -127,7 +127,7 @@ export default function TeachersPage() {
             />
             <button
               type="submit"
-              className="rounded-full bg-pp-blue px-5 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-pp-blue-light"
+              className="rounded-full bg-pp-gold px-5 py-1.5 text-sm font-semibold text-pp-ink transition-colors hover:bg-pp-gold-light"
             >
               Add
             </button>
@@ -142,7 +142,7 @@ export default function TeachersPage() {
               className="rounded-2xl border border-pp-border bg-pp-card p-4"
             >
               <div className="flex items-center justify-between">
-                <p className="font-semibold text-white">
+                <p className="font-semibold text-pp-text">
                   {cls.name}
                   {cls.room && (
                     <span className="ml-2 text-xs font-normal text-pp-muted">
@@ -204,7 +204,7 @@ export default function TeachersPage() {
 
         {/* Teachers */}
         <section className="space-y-4">
-          <h2 className="font-bold text-white">Teachers</h2>
+          <h2 className="font-display text-xl font-semibold text-pp-text">Teachers</h2>
           <form
             onSubmit={addTeacher}
             className="flex flex-wrap items-center gap-2 rounded-2xl border border-pp-border bg-pp-card p-3"
@@ -226,13 +226,13 @@ export default function TeachersPage() {
                 type="checkbox"
                 checked={tSub}
                 onChange={(e) => setTSub(e.target.checked)}
-                className="accent-pp-blue"
+                className="accent-pp-gold"
               />
               Substitute
             </label>
             <button
               type="submit"
-              className="rounded-full bg-pp-blue px-5 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-pp-blue-light"
+              className="rounded-full bg-pp-gold px-5 py-1.5 text-sm font-semibold text-pp-ink transition-colors hover:bg-pp-gold-light"
             >
               Add
             </button>
@@ -253,10 +253,10 @@ export default function TeachersPage() {
                     className="flex items-center gap-3 px-4 py-3 text-sm"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-white">
+                      <p className="font-semibold text-pp-text">
                         {t.name}
                         {t.substitute && (
-                          <span className="ml-2 rounded-full bg-violet-500/25 px-2 py-0.5 text-xs font-semibold text-violet-300">
+                          <span className="ml-2 rounded-full bg-pp-gold/20 px-2 py-0.5 text-xs font-semibold text-pp-gold-light">
                             substitute
                           </span>
                         )}

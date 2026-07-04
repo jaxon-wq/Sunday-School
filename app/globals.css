@@ -3,25 +3,33 @@
 @theme {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-fraunces);
 
-  /* Paramount+-inspired palette */
-  --color-pp-bg: #070b19;
-  --color-pp-card: #101830;
-  --color-pp-card-2: #0b1226;
-  --color-pp-border: #1e2a4d;
-  --color-pp-blue: #0064ff;
-  --color-pp-blue-light: #3b82ff;
-  --color-pp-text: #eef2ff;
-  --color-pp-muted: #8a95bb;
+  /* Gallery palette — warm ink, ivory, and gold to match the paintings */
+  --color-pp-bg: #0f0d0a;
+  --color-pp-card: #191510;
+  --color-pp-card-2: #131009;
+  --color-pp-border: #2e2718;
+  --color-pp-blue: #c9a24b;
+  --color-pp-blue-light: #e0bc66;
+  --color-pp-text: #f2ecdd;
+  --color-pp-muted: #a2947a;
+  --color-pp-gold: #c9a24b;
+  --color-pp-gold-light: #e0bc66;
+  --color-pp-ink: #0f0d0a;
 }
 
 body {
   background:
-    radial-gradient(1200px 600px at 50% -10%, rgba(0, 100, 255, 0.22), transparent 60%),
-    #070b19;
-  color: #eef2ff;
+    radial-gradient(1100px 500px at 50% -12%, rgba(201, 162, 75, 0.13), transparent 60%),
+    #0f0d0a;
+  color: #f2ecdd;
   min-height: 100vh;
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-fraunces), Georgia, serif;
 }
 
 /* hide horizontal scrollbars on carousels */
