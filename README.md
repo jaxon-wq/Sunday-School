@@ -1,36 +1,36 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sunday School Manager
 
-## Getting Started
+A simple organizer for a ward Sunday School presidency, built around the
+2026 **Come, Follow Me — Old Testament** curriculum.
 
-First, run the development server:
+## Features
+
+- **Dashboard** — the next Sunday School date and lesson, who's teaching each
+  class (including substitutes), and warnings for classes with no teacher.
+- **Schedule** — all 52 weeks of the official 2026 Come, Follow Me outline,
+  with teaching Sundays highlighted (configurable: 1st & 3rd, 2nd & 4th, or
+  every Sunday — through August 30 only; starting September 6, 2026 the app
+  automatically switches to the new second-hour schedule where Sunday School
+  meets every Sunday for 25 minutes). Assign a substitute per class per
+  Sunday and add week notes (ward conference, combined classes, etc.).
+- **Teachers & Classes** — add classes and teachers, assign teachers to
+  classes, and flag people as substitutes.
+
+All data is stored in your browser (localStorage) — no accounts, no server,
+no database. Note this means data is per-device; clear your browser data and
+it's gone.
+
+## Running it
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Curriculum source
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The weekly outline comes from
+[Come, Follow Me — For Home and Church: Old Testament 2026](https://www.churchofjesuschrist.org/study/manual/come-follow-me-for-home-and-church-old-testament-2026?lang=eng).
+Lesson data lives in [lib/lessons.ts](lib/lessons.ts).
