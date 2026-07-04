@@ -326,7 +326,12 @@ export default function SchedulePage() {
           Come, Follow Me — For Home and Church: Old Testament 2026
         </a>
         . Artwork attribution in{" "}
-        <a href="/art/ATTRIBUTION.md" className="text-primary underline">
+        <a
+          href="https://github.com/jaxon-wq/Sunday-School/blob/main/public/art/ATTRIBUTION.md"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary underline"
+        >
           public/art
         </a>
         .

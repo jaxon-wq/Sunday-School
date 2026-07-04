@@ -7,10 +7,12 @@
 
 export type Artwork = { title: string; artist: string; file: string };
 
+export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
 const A = (title: string, artist: string, week: number, ext = "jpg"): Artwork => ({
   title,
   artist,
-  file: `/art/week-${String(week).padStart(2, "0")}.${ext}`,
+  file: `${BASE_PATH}/art/week-${String(week).padStart(2, "0")}.${ext}`,
 });
 
 export const ARTWORKS: Record<number, Artwork> = {
