@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { uid, useAppData } from "@/lib/store";
+import { useRef, useState } from "react";
+import { migrate, uid, useAppData } from "@/lib/store";
 
 const inputCls =
-  "rounded-lg border border-pp-border bg-pp-card-2 px-3 py-1.5 text-sm text-pp-text placeholder:text-pp-muted/60";
+  "rounded-md border border-line px-3 py-1.5 text-sm placeholder:text-ink-3";
 
 export default function TeachersPage() {
   const { data, update } = useAppData();
@@ -13,6 +13,7 @@ export default function TeachersPage() {
   const [tName, setTName] = useState("");
   const [tPhone, setTPhone] = useState("");
   const [tSub, setTSub] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
   if (!data) return null;
 
   function addClass(e: React.FormEvent) {
@@ -46,12 +47,7 @@ export default function TeachersPage() {
       ...d,
       teachers: [
         ...d.teachers,
-        {
-          id: uid(),
-          name,
-          phone: tPhone.trim() || undefined,
-          substitute: tSub,
-        },
+        { id: uid(), name, phone: tPhone.trim() || undefined, substitute: tSub },
       ],
     }));
     setTName("");
@@ -94,65 +90,121 @@ export default function TeachersPage() {
     }));
   }
 
+  function exportData() {
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "sunday-school-data.json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function importData(file: File) {
+    file.text().then((text) => {
+      try {
+        const incoming = migrate(JSON.parse(text));
+        if (
+          window.confirm(
+            `Import ${incoming.teachers.length} teachers and ${incoming.classes.length} classes? This replaces the data on this device.`
+          )
+        ) {
+          update(() => incoming);
+        }
+      } catch {
+        window.alert("That file doesn't look like a Sunday School export.");
+      }
+    });
+  }
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-4xl font-semibold tracking-tight text-pp-text">
-          Teachers &amp; Classes
-        </h1>
-        <p className="mt-2 text-sm text-pp-muted">
-          Set up your classes, add teachers, and assign who teaches what.
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="font-serif text-3xl font-bold tracking-tight">
+            Teachers &amp; Classes
+          </h1>
+          <p className="mt-1 text-sm text-ink-2">
+            Set up your classes, add teachers, and assign who teaches what.
+            Populate from LCR when you get access.
+          </p>
+        </div>
+        <div className="flex gap-2 text-sm">
+          <button
+            onClick={exportData}
+            className="rounded-md border border-line-2 bg-white px-4 py-1.5 font-semibold text-ink hover:bg-surface"
+          >
+            Export data
+          </button>
+          <button
+            onClick={() => fileRef.current?.click()}
+            className="rounded-md border border-line-2 bg-white px-4 py-1.5 font-semibold text-ink hover:bg-surface"
+          >
+            Import
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/json"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) importData(f);
+              e.target.value = "";
+            }}
+          />
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Classes */}
         <section className="space-y-4">
-          <h2 className="font-display text-xl font-semibold text-pp-text">Classes</h2>
+          <h2 className="font-serif text-xl font-bold">Classes</h2>
           <form
             onSubmit={addClass}
-            className="flex flex-wrap gap-2 rounded-2xl border border-pp-border bg-pp-card p-3"
+            className="flex flex-wrap gap-2 rounded-lg border border-line bg-surface p-3"
           >
             <input
               value={className}
               onChange={(e) => setClassName(e.target.value)}
               placeholder="Class name (e.g. Youth 14–15)"
-              className={`min-w-0 flex-1 ${inputCls}`}
+              className={`min-w-0 flex-1 bg-white ${inputCls}`}
             />
             <input
               value={classRoom}
               onChange={(e) => setClassRoom(e.target.value)}
               placeholder="Room"
-              className={`w-24 ${inputCls}`}
+              className={`w-24 bg-white ${inputCls}`}
             />
             <button
               type="submit"
-              className="rounded-full bg-pp-gold px-5 py-1.5 text-sm font-semibold text-pp-ink transition-colors hover:bg-pp-gold-light"
+              className="rounded-md bg-primary px-4 py-1.5 text-sm font-semibold text-white hover:bg-primary-dark"
             >
               Add
             </button>
           </form>
 
           {data.classes.length === 0 && (
-            <p className="text-sm text-pp-muted">No classes yet.</p>
+            <p className="text-sm text-ink-3">No classes yet.</p>
           )}
           {data.classes.map((cls) => (
             <div
               key={cls.id}
-              className="rounded-2xl border border-pp-border bg-pp-card p-4"
+              className="rounded-lg border border-line bg-white p-4"
             >
               <div className="flex items-center justify-between">
-                <p className="font-semibold text-pp-text">
+                <p className="font-semibold">
                   {cls.name}
                   {cls.room && (
-                    <span className="ml-2 text-xs font-normal text-pp-muted">
+                    <span className="ml-2 text-xs font-normal text-ink-3">
                       Room {cls.room}
                     </span>
                   )}
                 </p>
                 <button
                   onClick={() => removeClass(cls.id)}
-                  className="text-xs text-pp-muted hover:text-rose-400"
+                  className="text-xs text-ink-3 hover:text-danger"
                 >
                   Delete
                 </button>
@@ -164,12 +216,12 @@ export default function TeachersPage() {
                   return (
                     <span
                       key={tid}
-                      className="flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold text-pp-text"
+                      className="flex items-center gap-1.5 rounded-full bg-surface-2 px-2.5 py-1 text-xs font-medium text-ink"
                     >
                       {t.name}
                       <button
                         onClick={() => unassignTeacher(cls.id, tid)}
-                        className="text-pp-muted hover:text-rose-400"
+                        className="text-ink-3 hover:text-danger"
                         aria-label={`Remove ${t.name} from ${cls.name}`}
                       >
                         ×
@@ -178,14 +230,14 @@ export default function TeachersPage() {
                   );
                 })}
                 {cls.teacherIds.length === 0 && (
-                  <span className="text-xs font-semibold text-amber-300">
+                  <span className="text-xs font-semibold text-warn">
                     No teacher assigned
                   </span>
                 )}
                 <select
                   value=""
                   onChange={(e) => assignTeacher(cls.id, e.target.value)}
-                  className="rounded-lg border border-pp-border bg-pp-card-2 px-2 py-1 text-xs text-pp-muted"
+                  className="rounded-md border border-line bg-white px-2 py-1 text-xs text-ink-2"
                 >
                   <option value="">+ Assign teacher…</option>
                   {data.teachers
@@ -204,45 +256,45 @@ export default function TeachersPage() {
 
         {/* Teachers */}
         <section className="space-y-4">
-          <h2 className="font-display text-xl font-semibold text-pp-text">Teachers</h2>
+          <h2 className="font-serif text-xl font-bold">Teachers</h2>
           <form
             onSubmit={addTeacher}
-            className="flex flex-wrap items-center gap-2 rounded-2xl border border-pp-border bg-pp-card p-3"
+            className="flex flex-wrap items-center gap-2 rounded-lg border border-line bg-surface p-3"
           >
             <input
               value={tName}
               onChange={(e) => setTName(e.target.value)}
               placeholder="Name"
-              className={`min-w-0 flex-1 ${inputCls}`}
+              className={`min-w-0 flex-1 bg-white ${inputCls}`}
             />
             <input
               value={tPhone}
               onChange={(e) => setTPhone(e.target.value)}
               placeholder="Phone"
-              className={`w-32 ${inputCls}`}
+              className={`w-32 bg-white ${inputCls}`}
             />
-            <label className="flex items-center gap-1.5 text-xs text-pp-muted">
+            <label className="flex items-center gap-1.5 text-xs text-ink-2">
               <input
                 type="checkbox"
                 checked={tSub}
                 onChange={(e) => setTSub(e.target.checked)}
-                className="accent-pp-gold"
+                className="accent-primary"
               />
               Substitute
             </label>
             <button
               type="submit"
-              className="rounded-full bg-pp-gold px-5 py-1.5 text-sm font-semibold text-pp-ink transition-colors hover:bg-pp-gold-light"
+              className="rounded-md bg-primary px-4 py-1.5 text-sm font-semibold text-white hover:bg-primary-dark"
             >
               Add
             </button>
           </form>
 
           {data.teachers.length === 0 && (
-            <p className="text-sm text-pp-muted">No teachers yet.</p>
+            <p className="text-sm text-ink-3">No teachers yet.</p>
           )}
           {data.teachers.length > 0 && (
-            <ul className="divide-y divide-white/5 rounded-2xl border border-pp-border bg-pp-card">
+            <ul className="divide-y divide-line rounded-lg border border-line bg-white">
               {data.teachers.map((t) => {
                 const classes = data.classes
                   .filter((c) => c.teacherIds.includes(t.id))
@@ -253,15 +305,15 @@ export default function TeachersPage() {
                     className="flex items-center gap-3 px-4 py-3 text-sm"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-pp-text">
+                      <p className="font-semibold">
                         {t.name}
                         {t.substitute && (
-                          <span className="ml-2 rounded-full bg-pp-gold/20 px-2 py-0.5 text-xs font-semibold text-pp-gold-light">
+                          <span className="ml-2 rounded bg-primary-soft px-1.5 py-0.5 text-xs font-semibold text-primary">
                             substitute
                           </span>
                         )}
                       </p>
-                      <p className="truncate text-xs text-pp-muted">
+                      <p className="truncate text-xs text-ink-2">
                         {[t.phone, classes.join(", ") || "Unassigned"]
                           .filter(Boolean)
                           .join(" · ")}
@@ -269,7 +321,7 @@ export default function TeachersPage() {
                     </div>
                     <button
                       onClick={() => removeTeacher(t.id)}
-                      className="text-xs text-pp-muted hover:text-rose-400"
+                      className="text-xs text-ink-3 hover:text-danger"
                     >
                       Delete
                     </button>
@@ -280,6 +332,12 @@ export default function TeachersPage() {
           )}
         </section>
       </div>
+
+      <p className="text-xs text-ink-3">
+        Data lives on this device and belongs to the ward — use Export to back
+        up or hand off, and Import on a counselor&apos;s device to share the
+        current setup.
+      </p>
     </div>
   );
 }

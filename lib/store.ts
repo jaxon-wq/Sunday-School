@@ -27,12 +27,53 @@ export type Override = {
 
 export type MeetWeeks = "first-third" | "second-fourth" | "every";
 
+export type PresidencyRole =
+  | "President"
+  | "First Counselor"
+  | "Second Counselor"
+  | "Secretary";
+
+export const PRESIDENCY_ROLES: PresidencyRole[] = [
+  "President",
+  "First Counselor",
+  "Second Counselor",
+  "Secretary",
+];
+
+export type PresidencyMember = {
+  role: PresidencyRole;
+  name: string;
+  phone?: string;
+};
+
+export type ChecklistItem = {
+  id: string;
+  label: string;
+  assignedTo: PresidencyRole | "Everyone";
+};
+
+// Handbook-informed default Sunday rhythm for the presidency.
+export const DEFAULT_CHECKLIST: ChecklistItem[] = [
+  { id: "confirm-teachers", label: "Thursday: confirm every class has a teacher for Sunday", assignedTo: "President" },
+  { id: "arrange-subs", label: "Friday: arrange substitutes for any gaps", assignedTo: "First Counselor" },
+  { id: "check-in", label: "Saturday: check in with any new or struggling teachers", assignedTo: "Second Counselor" },
+  { id: "rooms-ready", label: "Sunday 8:40 — classrooms unlocked, chairs and materials ready", assignedTo: "Second Counselor" },
+  { id: "greet-teachers", label: "Sunday 8:50 — greet each teacher before class", assignedTo: "President" },
+  { id: "visit-class", label: "During class: visit one class (rotate weekly) and note what went well", assignedTo: "First Counselor" },
+  { id: "council-notes", label: "After class: note follow-ups and anything for ward council", assignedTo: "Secretary" },
+  { id: "thank-teacher", label: "Sunday evening: thank one teacher by text", assignedTo: "President" },
+];
+
 export type AppData = {
   teachers: Teacher[];
   classes: SSClass[];
   overrides: Override[];
   weekNotes: Record<string, string>;
   settings: { meetWeeks: MeetWeeks };
+  presidency: PresidencyMember[];
+  checklistItems: ChecklistItem[];
+  // checklist completion state: sunday ISO -> itemId -> done
+  checklist: Record<string, Record<string, boolean>>;
 };
 
 const KEY = "sunday-school-v1";
@@ -43,6 +84,9 @@ const DEFAULT_DATA: AppData = {
   overrides: [],
   weekNotes: {},
   settings: { meetWeeks: "first-third" },
+  presidency: PRESIDENCY_ROLES.map((role) => ({ role, name: "" })),
+  checklistItems: DEFAULT_CHECKLIST,
+  checklist: {},
 };
 
 export function uid(): string {
@@ -51,14 +95,33 @@ export function uid(): string {
     : Math.random().toString(36).slice(2);
 }
 
+// Merge stored data over defaults so older saves gain new fields.
+export function migrate(raw: unknown): AppData {
+  const d = (raw ?? {}) as Partial<AppData>;
+  return {
+    ...DEFAULT_DATA,
+    ...d,
+    settings: { ...DEFAULT_DATA.settings, ...(d.settings ?? {}) },
+    presidency:
+      Array.isArray(d.presidency) && d.presidency.length === 4
+        ? d.presidency
+        : DEFAULT_DATA.presidency,
+    checklistItems:
+      Array.isArray(d.checklistItems) && d.checklistItems.length > 0
+        ? d.checklistItems
+        : DEFAULT_CHECKLIST,
+    checklist: d.checklist ?? {},
+    weekNotes: d.weekNotes ?? {},
+  };
+}
+
 export function useAppData() {
   const [data, setData] = useState<AppData | null>(null);
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem(KEY);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setData(raw ? { ...DEFAULT_DATA, ...JSON.parse(raw) } : DEFAULT_DATA);
+      setData(raw ? migrate(JSON.parse(raw)) : DEFAULT_DATA);
     } catch {
       setData(DEFAULT_DATA);
     }
@@ -133,4 +196,48 @@ export function effectiveTeacherLabel(
   if (names.length === 0)
     return { label: "No teacher assigned", isSubstitute: false, missing: true };
   return { label: names.join(", "), isSubstitute: false, missing: false };
+}
+
+// ---- Text-message helpers (teachers never install anything) ----
+
+export function firstName(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  // "Brother Larsen" / "Sister Hale" -> keep the honorific + surname
+  if (parts.length === 2 && /^(brother|sister|bro\.?|sis\.?)$/i.test(parts[0]))
+    return name.trim();
+  return parts[0] ?? name;
+}
+
+export function smsHref(phone: string, body: string): string {
+  const digits = phone.replace(/[^\d+]/g, "");
+  // `?&body=` is the cross-platform-safe form (iOS and Android both accept it)
+  return `sms:${digits}?&body=${encodeURIComponent(body)}`;
+}
+
+export function subRequestMessage(opts: {
+  teacherName: string;
+  className: string;
+  sundayLabel: string;
+  lessonRef: string;
+  fromName?: string;
+}): string {
+  const from = opts.fromName ? ` –${opts.fromName}` : "";
+  return (
+    `Hi ${firstName(opts.teacherName)}, could you cover the ${opts.className} class ` +
+    `on ${opts.sundayLabel}? The lesson is ${opts.lessonRef} in Come, Follow Me. ` +
+    `No pressure if you can't — just let me know either way. Thank you!${from}`
+  );
+}
+
+export function reminderMessage(opts: {
+  teacherName: string;
+  className: string;
+  sundayLabel: string;
+  lessonRef: string;
+}): string {
+  return (
+    `Hi ${firstName(opts.teacherName)}, just a friendly reminder that you're ` +
+    `teaching ${opts.className} on ${opts.sundayLabel} — the lesson is ` +
+    `${opts.lessonRef}. Thank you for all you do!`
+  );
 }

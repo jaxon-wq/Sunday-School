@@ -1,0 +1,292 @@
+"use client";
+
+import { useState } from "react";
+import { LESSONS, formatSunday, parseISODate } from "@/lib/lessons";
+import {
+  ChecklistItem,
+  PRESIDENCY_ROLES,
+  PresidencyRole,
+  isTeachingSunday,
+  todayStart,
+  uid,
+  useAppData,
+} from "@/lib/store";
+
+// Adapted from General Handbook ch. 13 (Sunday School).
+const RESPONSIBILITIES: { role: string; duties: string[] }[] = [
+  {
+    role: "President",
+    duties: [
+      "Preside; serve as a member of the ward council",
+      "Recommend members to serve as Sunday School teachers",
+      "Support teacher council meetings and help teachers improve in the Savior's way",
+      "Help ward members improve gospel learning at home and at church",
+      "Hold regular presidency meetings; counsel with the bishopric",
+    ],
+  },
+  {
+    role: "First Counselor",
+    duties: [
+      "Serve as assigned by the president (suggested: adult classes)",
+      "Arrange substitutes when teachers can't make it",
+      "Visit classes regularly; encourage and support teachers",
+      "Lead teacher council discussions as assigned",
+    ],
+  },
+  {
+    role: "Second Counselor",
+    duties: [
+      "Serve as assigned by the president (suggested: youth classes)",
+      "Sunday logistics: rooms, chairs, and class materials ready",
+      "Fellowship and orient newly called teachers",
+      "Check in with new or struggling teachers each week",
+    ],
+  },
+  {
+    role: "Secretary",
+    duties: [
+      "Prepare agendas for presidency and teacher council meetings",
+      "Record assignments and follow-ups; make sure nothing is dropped",
+      "Keep class and teacher lists current (from LCR when available)",
+      "Note items the president should raise in ward council",
+    ],
+  },
+];
+
+export default function PresidencyPage() {
+  const { data, update } = useAppData();
+  const [newItem, setNewItem] = useState("");
+  const [newOwner, setNewOwner] = useState<PresidencyRole | "Everyone">(
+    "President"
+  );
+  if (!data) return null;
+
+  const today = todayStart();
+  const upcomingTeaching = LESSONS.filter(
+    (l) =>
+      parseISODate(l.sunday) >= today &&
+      isTeachingSunday(l.sunday, data.settings.meetWeeks)
+  );
+  const target = upcomingTeaching[0];
+  const done = target ? (data.checklist[target.sunday] ?? {}) : {};
+  const doneCount = target
+    ? data.checklistItems.filter((i) => done[i.id]).length
+    : 0;
+
+  function setMember(role: PresidencyRole, field: "name" | "phone", value: string) {
+    update((d) => ({
+      ...d,
+      presidency: d.presidency.map((m) =>
+        m.role === role ? { ...m, [field]: value } : m
+      ),
+    }));
+  }
+
+  function toggle(itemId: string) {
+    if (!target) return;
+    const sunday = target.sunday;
+    update((d) => {
+      const forDay = { ...(d.checklist[sunday] ?? {}) };
+      forDay[itemId] = !forDay[itemId];
+      return { ...d, checklist: { ...d.checklist, [sunday]: forDay } };
+    });
+  }
+
+  function addItem(e: React.FormEvent) {
+    e.preventDefault();
+    const label = newItem.trim();
+    if (!label) return;
+    const item: ChecklistItem = { id: uid(), label, assignedTo: newOwner };
+    update((d) => ({ ...d, checklistItems: [...d.checklistItems, item] }));
+    setNewItem("");
+  }
+
+  function removeItem(id: string) {
+    update((d) => ({
+      ...d,
+      checklistItems: d.checklistItems.filter((i) => i.id !== id),
+    }));
+  }
+
+  function ownerName(role: ChecklistItem["assignedTo"]): string {
+    if (role === "Everyone") return "Everyone";
+    const m = data!.presidency.find((p) => p.role === role);
+    return m?.name ? `${role} · ${m.name.split(" ")[0]}` : role;
+  }
+
+  return (
+    <div className="space-y-10">
+      <div>
+        <h1 className="font-serif text-3xl font-bold tracking-tight">
+          Presidency
+        </h1>
+        <p className="mt-1 text-sm text-ink-2">
+          Who we are, what each of us carries, and the rhythm of a Sunday.
+        </p>
+      </div>
+
+      {/* Members */}
+      <section>
+        <h2 className="mb-3 font-serif text-xl font-bold">Members</h2>
+        <div className="overflow-hidden rounded-lg border border-line bg-white">
+          {data.presidency.map((m, i) => (
+            <div
+              key={m.role}
+              className={`flex flex-wrap items-center gap-3 px-4 py-3 ${
+                i > 0 ? "border-t border-line" : ""
+              }`}
+            >
+              <span className="w-36 shrink-0 text-sm font-semibold">
+                {m.role}
+              </span>
+              <input
+                value={m.name}
+                onChange={(e) => setMember(m.role, "name", e.target.value)}
+                placeholder="Name"
+                className="min-w-0 flex-1 rounded-md border border-line px-3 py-1.5 text-sm placeholder:text-ink-3"
+              />
+              <input
+                value={m.phone ?? ""}
+                onChange={(e) => setMember(m.role, "phone", e.target.value)}
+                placeholder="Phone"
+                className="w-36 rounded-md border border-line px-3 py-1.5 text-sm placeholder:text-ink-3"
+              />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Sunday checklist */}
+      <section>
+        <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="font-serif text-xl font-bold">Sunday checklist</h2>
+          {target && (
+            <p className="text-sm text-ink-2">
+              For{" "}
+              <span className="font-semibold text-ink">
+                {formatSunday(target.sunday)}
+              </span>{" "}
+              · {target.ref} ·{" "}
+              <span className="font-semibold text-primary">
+                {doneCount}/{data.checklistItems.length} done
+              </span>
+            </p>
+          )}
+        </div>
+        {!target ? (
+          <p className="text-sm text-ink-3">No upcoming teaching Sundays.</p>
+        ) : (
+          <div className="overflow-hidden rounded-lg border border-line bg-white">
+            {data.checklistItems.map((item, i) => (
+              <label
+                key={item.id}
+                className={`group flex cursor-pointer items-center gap-3 px-4 py-3 hover:bg-surface ${
+                  i > 0 ? "border-t border-line" : ""
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={Boolean(done[item.id])}
+                  onChange={() => toggle(item.id)}
+                  className="h-4 w-4 shrink-0 accent-primary"
+                />
+                <span
+                  className={`flex-1 text-sm ${
+                    done[item.id] ? "text-ink-3 line-through" : "text-ink"
+                  }`}
+                >
+                  {item.label}
+                </span>
+                <span className="shrink-0 rounded bg-surface-2 px-2 py-0.5 text-xs font-medium text-ink-2">
+                  {ownerName(item.assignedTo)}
+                </span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    removeItem(item.id);
+                  }}
+                  className="text-xs text-ink-3 opacity-0 transition-opacity hover:text-danger group-hover:opacity-100"
+                  aria-label={`Remove "${item.label}"`}
+                >
+                  Remove
+                </button>
+              </label>
+            ))}
+            <form
+              onSubmit={addItem}
+              className="flex flex-wrap items-center gap-2 border-t border-line bg-surface px-4 py-3"
+            >
+              <input
+                value={newItem}
+                onChange={(e) => setNewItem(e.target.value)}
+                placeholder="Add a checklist item…"
+                className="min-w-0 flex-1 rounded-md border border-line bg-white px-3 py-1.5 text-sm placeholder:text-ink-3"
+              />
+              <select
+                value={newOwner}
+                onChange={(e) =>
+                  setNewOwner(e.target.value as PresidencyRole | "Everyone")
+                }
+                className="rounded-md border border-line bg-white px-2 py-1.5 text-sm"
+              >
+                {[...PRESIDENCY_ROLES, "Everyone"].map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="submit"
+                className="rounded-md bg-primary px-4 py-1.5 text-sm font-semibold text-white hover:bg-primary-dark"
+              >
+                Add
+              </button>
+            </form>
+          </div>
+        )}
+        <p className="mt-2 text-xs text-ink-3">
+          The checklist resets automatically each teaching Sunday. Checked items
+          are saved per date.
+        </p>
+      </section>
+
+      {/* Roles & responsibilities */}
+      <section>
+        <h2 className="mb-3 font-serif text-xl font-bold">
+          Roles &amp; responsibilities
+        </h2>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {RESPONSIBILITIES.map((r) => (
+            <div
+              key={r.role}
+              className="rounded-lg border border-line bg-white p-5"
+            >
+              <h3 className="font-serif text-lg font-bold">{r.role}</h3>
+              <ul className="mt-3 space-y-2">
+                {r.duties.map((duty) => (
+                  <li key={duty} className="flex gap-2 text-sm text-ink-2">
+                    <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary" />
+                    {duty}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-xs text-ink-3">
+          Adapted from the{" "}
+          <a
+            href="https://www.churchofjesuschrist.org/study/manual/general-handbook/13-sunday-school?lang=eng"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary underline"
+          >
+            General Handbook, chapter 13: Sunday School
+          </a>
+          . Assignments between counselors are the president&apos;s to adjust.
+        </p>
+      </section>
+    </div>
+  );
+}

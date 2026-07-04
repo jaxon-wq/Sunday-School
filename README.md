@@ -1,24 +1,40 @@
-# Sunday School Manager
+# Sunday School
 
-A simple organizer for a ward Sunday School presidency, built around the
-2026 **Come, Follow Me — Old Testament** curriculum.
+A ward Sunday School presidency tool for the 2026 **Come, Follow Me — Old
+Testament** year, built to look and feel like the Church's own apps
+(churchofjesuschrist.org · Gospel Library · Member Tools).
+
+Read [GOSPEL.md](GOSPEL.md) first — it is the constitution of this project.
+Every feature is measured against it.
 
 ## Features
 
-- **Dashboard** — the next Sunday School date and lesson, who's teaching each
-  class (including substitutes), and warnings for classes with no teacher.
-- **Schedule** — all 52 weeks of the official 2026 Come, Follow Me outline,
-  with teaching Sundays highlighted (configurable: 1st & 3rd, 2nd & 4th, or
-  every Sunday — through August 30 only; starting September 6, 2026 the app
-  automatically switches to the new second-hour schedule where Sunday School
-  meets every Sunday for 25 minutes). Assign a substitute per class per
-  Sunday and add week notes (ward conference, combined classes, etc.).
-- **Teachers & Classes** — add classes and teachers, assign teachers to
-  classes, and flag people as substitutes.
+- **Home** — the next Sunday School at a glance: artwork, lesson, who's
+  teaching each class, substitutes, and gaps.
+- **Schedule** — all 52 weeks with classic gospel artwork, grouped by month.
+  Assign substitutes and send prefilled text messages (sub requests and
+  teacher reminders) straight from any Sunday. Handles the September 6, 2026
+  second-hour change automatically (every Sunday, 25 minutes).
+- **Teachers & Classes** — roster and assignments, ready to be populated from
+  LCR. Export/import JSON to back up or share with counselors.
+- **Presidency** — the four members, Handbook-13 roles and responsibilities,
+  and a per-Sunday checklist with assignments (confirm teachers Thursday,
+  arrange subs Friday, rooms ready 8:40, …).
 
-All data is stored in your browser (localStorage) — no accounts, no server,
-no database. Note this means data is per-device; clear your browser data and
-it's gone.
+## Design
+
+The UI follows the Church's design language: Ensign Sans/Serif (via the
+Church's public font service) with Noto fallbacks, the official palette
+(text `#212225`, primary `#006184`), white surfaces, serif titles.
+
+All 52 paintings are public-domain classics (Rembrandt, Michelangelo, Tissot,
+Doré, Carl Bloch…) served locally from [public/art](public/art) — no network
+dependency. Sources in [public/art/ATTRIBUTION.md](public/art/ATTRIBUTION.md).
+
+## Data
+
+Everything lives in the browser (localStorage): no accounts, no server, no
+analytics. The data belongs to the ward — export it, import it, hand it off.
 
 ## Running it
 
@@ -27,10 +43,9 @@ npm install
 npm run dev
 ```
 
-Then open [http://localhost:3000](http://localhost:3000).
-
 ## Curriculum source
 
-The weekly outline comes from
+Weekly outline from
 [Come, Follow Me — For Home and Church: Old Testament 2026](https://www.churchofjesuschrist.org/study/manual/come-follow-me-for-home-and-church-old-testament-2026?lang=eng).
-Lesson data lives in [lib/lessons.ts](lib/lessons.ts).
+Lesson data in [lib/lessons.ts](lib/lessons.ts). Role descriptions adapted from
+the [General Handbook, ch. 13](https://www.churchofjesuschrist.org/study/manual/general-handbook/13-sunday-school?lang=eng).
