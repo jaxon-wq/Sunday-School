@@ -35,6 +35,7 @@ export const metadata: Metadata = {
 
 export const viewport = {
   themeColor: "#006184",
+  viewportFit: "cover" as const,
 };
 
 export default function RootLayout({
@@ -54,7 +55,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full">
         <Nav />
-        <main className="mx-auto max-w-5xl px-4 py-8">
+        <main className="mx-auto max-w-5xl px-4 pb-32 pt-8">
           <LockGate>{children}</LockGate>
         </main>
       </body>
