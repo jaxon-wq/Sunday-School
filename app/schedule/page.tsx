@@ -155,15 +155,25 @@ export default function SchedulePage() {
                 </h2>
               )}
               <div
-                className={`overflow-hidden rounded-lg border bg-white ${
+                className={`overflow-hidden rounded-lg border ${
                   past ? "opacity-60" : ""
-                } ${isNext ? "border-primary" : "border-line"}`}
+                } ${isNext ? "border-primary" : "border-line"} ${
+                  teaching ? "bg-white" : "bg-surface"
+                }`}
               >
-                <div className="flex items-stretch gap-4 p-4">
-                  <div className="hidden w-28 shrink-0 self-stretch overflow-hidden rounded-md sm:block">
+                <div
+                  className={`flex items-stretch gap-3 sm:gap-4 ${
+                    teaching ? "p-4" : "p-3"
+                  }`}
+                >
+                  <div
+                    className={`shrink-0 self-stretch overflow-hidden rounded-md ${
+                      teaching ? "w-20 sm:w-28" : "w-14 opacity-80 sm:w-20"
+                    }`}
+                  >
                     <LessonArt
                       week={lesson.week}
-                      className="h-full min-h-16 w-full"
+                      className="h-full min-h-14 w-full"
                     />
                   </div>
                   <div className="min-w-0 flex-1 py-0.5">
@@ -201,8 +211,8 @@ export default function SchedulePage() {
                         <span
                           className={`rounded px-2 py-0.5 text-xs font-semibold ${
                             teaching
-                              ? "bg-surface-2 text-ink"
-                              : "bg-surface text-ink-3"
+                              ? "bg-primary-soft text-primary-dark"
+                              : "bg-surface-2 text-ink-3"
                           }`}
                         >
                           {teaching
