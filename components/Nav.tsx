@@ -58,7 +58,7 @@ export default function Nav() {
   return (
     <>
       {/* Slim top brand bar */}
-      <header className="border-b border-line bg-white">
+      <header className="border-b border-line bg-white print:hidden">
         <div className="mx-auto flex max-w-5xl items-baseline gap-2.5 px-4 py-3">
           <Link href="/" className="font-serif text-lg font-bold tracking-tight text-ink">
             Sunday School
@@ -70,7 +70,7 @@ export default function Nav() {
       {/* Liquid-glass pill navigation */}
       <nav
         aria-label="Primary"
-        className="fixed inset-x-0 z-20 flex justify-center px-4"
+        className="fixed inset-x-0 z-20 flex justify-center px-4 print:hidden"
         style={{ bottom: "calc(0.9rem + env(safe-area-inset-bottom, 0px))" }}
       >
         <div className="flex items-center rounded-full border border-white/60 bg-white/65 px-1 py-1.5 shadow-[0_10px_36px_rgba(16,24,40,0.16),inset_0_1px_0_rgba(255,255,255,0.7)] ring-1 ring-black/5 backdrop-blur-xl backdrop-saturate-150 sm:gap-0.5 sm:px-1.5">

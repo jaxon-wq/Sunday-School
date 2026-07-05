@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import LessonArt from "@/components/LessonArt";
 import { LESSONS, Lesson, formatSunday, lessonUrl, occurrenceLabel, parseISODate } from "@/lib/lessons";
 import {
@@ -82,7 +83,10 @@ export default function SchedulePage() {
           </h1>
           <p className="mt-1 text-sm text-ink-2">
             Come, Follow Me — Old Testament. Assign substitutes, send texts, and
-            add notes for teaching Sundays.
+            add notes for teaching Sundays.{" "}
+            <Link href="/month" className="font-semibold text-primary hover:underline">
+              Month view →
+            </Link>
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-4 text-sm">
@@ -374,6 +378,12 @@ export default function SchedulePage() {
             </div>
           );
         })}
+      </div>
+
+      <div className="rounded-lg border border-line bg-surface px-4 py-3 text-sm text-ink-2">
+        That&apos;s the whole 2026 Old Testament year. The{" "}
+        <span className="font-semibold">2027 New Testament schedule</span>{" "}
+        loads here this December — same app, next book.
       </div>
 
       <p className="text-xs text-ink-3">

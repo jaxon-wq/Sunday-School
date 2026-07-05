@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LESSONS, formatSunday, parseISODate } from "@/lib/lessons";
+import { getSyncConfig, pullFromCloud, pushToCloud, saveSyncConfig } from "@/lib/sync";
+import { migrate } from "@/lib/store";
 import {
   CARE_THRESHOLD,
   CARE_WATCH,
@@ -9,6 +11,7 @@ import {
   Meeting,
   PRESIDENCY_ROLES,
   PresidencyRole,
+  Visit,
   isTeachingSunday,
   offerBreakMessage,
   smsHref,
@@ -85,7 +88,67 @@ export default function PresidencyPage() {
   const [newActionOwner, setNewActionOwner] = useState<
     Record<string, PresidencyRole | "Everyone">
   >({});
+  const [visitClass, setVisitClass] = useState("");
+  const [visitBy, setVisitBy] = useState<PresidencyRole>("First Counselor");
+  const [visitNote, setVisitNote] = useState("");
+  const [syncToken, setSyncToken] = useState("");
+  const [syncGist, setSyncGist] = useState("");
+  const [syncPass, setSyncPass] = useState("");
+  const [syncMsg, setSyncMsg] = useState("");
+  const [syncBusy, setSyncBusy] = useState(false);
+  useEffect(() => {
+    const cfg = getSyncConfig();
+    setSyncToken(cfg.token);
+    setSyncGist(cfg.gistId);
+  }, []);
   if (!data) return null;
+
+  async function doPush() {
+    if (!data || !syncPass) {
+      setSyncMsg("Enter the presidency passphrase first.");
+      return;
+    }
+    setSyncBusy(true);
+    setSyncMsg("");
+    try {
+      saveSyncConfig(syncToken, syncGist);
+      const r = await pushToCloud(data, syncPass);
+      setSyncGist(r.gistId);
+      setSyncMsg(`Pushed ✓ (${new Date(r.updatedAt).toLocaleTimeString()})`);
+    } catch (e) {
+      setSyncMsg(e instanceof Error ? e.message : "Push failed.");
+    } finally {
+      setSyncBusy(false);
+    }
+  }
+
+  async function doPull() {
+    if (!syncPass) {
+      setSyncMsg("Enter the presidency passphrase first.");
+      return;
+    }
+    setSyncBusy(true);
+    setSyncMsg("");
+    try {
+      saveSyncConfig(syncToken, syncGist);
+      const r = await pullFromCloud(syncPass);
+      const incoming = migrate(r.data);
+      if (
+        window.confirm(
+          `Replace this device's data with the presidency copy from ${new Date(r.updatedAt).toLocaleString()}? (${incoming.teachers.length} teachers, ${incoming.classes.length} classes)`
+        )
+      ) {
+        update(() => incoming);
+        setSyncMsg("Pulled ✓ — this device now matches the presidency copy.");
+      } else {
+        setSyncMsg("Pull cancelled.");
+      }
+    } catch (e) {
+      setSyncMsg(e instanceof Error ? e.message : "Pull failed.");
+    } finally {
+      setSyncBusy(false);
+    }
+  }
 
   async function savePin(e: React.FormEvent) {
     e.preventDefault();
@@ -567,6 +630,111 @@ export default function PresidencyPage() {
         })()}
       </section>
 
+      {/* Class visits */}
+      <section>
+        <h2 className="mb-1 font-serif text-xl font-bold">Class visits</h2>
+        <p className="mb-3 text-sm text-ink-2">
+          The checklist says &quot;visit one class, rotate&quot; — this
+          remembers the rotation. What you note here becomes teacher-council
+          material.
+        </p>
+        {data.classes.length === 0 ? (
+          <p className="text-sm text-ink-3">Add classes first.</p>
+        ) : (
+          <>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!visitClass) return;
+                const v: Visit = {
+                  id: uid(),
+                  classId: visitClass,
+                  date: todayISO(),
+                  by: visitBy,
+                  note: visitNote.trim() || undefined,
+                };
+                update((d) => ({ ...d, visits: [...d.visits, v] }));
+                setVisitNote("");
+                setVisitClass("");
+              }}
+              className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-line bg-surface p-3"
+            >
+              <select
+                value={visitClass}
+                onChange={(e) => setVisitClass(e.target.value)}
+                className="rounded-md border border-line bg-white px-2 py-1.5 text-sm"
+              >
+                <option value="">Visited class…</option>
+                {data.classes.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={visitBy}
+                onChange={(e) => setVisitBy(e.target.value as PresidencyRole)}
+                className="rounded-md border border-line bg-white px-2 py-1.5 text-sm"
+              >
+                {PRESIDENCY_ROLES.map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </select>
+              <input
+                value={visitNote}
+                onChange={(e) => setVisitNote(e.target.value)}
+                placeholder="What went well?"
+                className="min-w-0 flex-1 rounded-md border border-line bg-white px-3 py-1.5 text-sm placeholder:text-ink-3"
+              />
+              <button
+                type="submit"
+                className="rounded-md bg-primary px-4 py-1.5 text-sm font-semibold text-white hover:bg-primary-dark"
+              >
+                Log visit
+              </button>
+            </form>
+            <div className="divide-y divide-line rounded-lg border border-line bg-white">
+              {[...data.classes]
+                .map((cls) => {
+                  const classVisits = data.visits
+                    .filter((v) => v.classId === cls.id)
+                    .sort((a, b) => b.date.localeCompare(a.date));
+                  return { cls, last: classVisits[0], count: classVisits.length };
+                })
+                .sort((a, b) =>
+                  (a.last?.date ?? "0000").localeCompare(b.last?.date ?? "0000")
+                )
+                .map(({ cls, last, count }, i) => (
+                  <div
+                    key={cls.id}
+                    className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 text-sm"
+                  >
+                    <span className="min-w-32 font-semibold">{cls.name}</span>
+                    {i === 0 && (
+                      <span className="rounded bg-primary-soft px-2 py-0.5 text-xs font-semibold text-primary">
+                        visit next
+                      </span>
+                    )}
+                    <span className="text-ink-2">
+                      {last
+                        ? `Last visited ${new Date(last.date + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })} by ${ownerName(last.by)}`
+                        : "Never visited"}
+                      {count > 0 && ` · ${count} visit${count === 1 ? "" : "s"}`}
+                    </span>
+                    {last?.note && (
+                      <span className="w-full text-xs italic text-ink-3 sm:w-auto">
+                        &ldquo;{last.note}&rdquo;
+                      </span>
+                    )}
+                  </div>
+                ))}
+            </div>
+          </>
+        )}
+      </section>
+
       {/* Security */}
       <section>
         <h2 className="mb-1 font-serif text-xl font-bold">Passcode</h2>
@@ -619,6 +787,67 @@ export default function PresidencyPage() {
             Note: exported and shared files are unencrypted — treat them like
             a paper roster. The website itself holds no ward data; this
             protects the copy on each device.
+          </p>
+        </div>
+      </section>
+
+      {/* Presidency sync */}
+      <section>
+        <h2 className="mb-1 font-serif text-xl font-bold">
+          Presidency sync <span className="text-sm font-normal text-ink-3">(beta)</span>
+        </h2>
+        <p className="mb-3 text-sm text-ink-2">
+          Push this device&apos;s data to a private, encrypted cloud copy;
+          counselors pull it to theirs. Data leaves the device only as
+          ciphertext — the passphrase never does.
+        </p>
+        <div className="space-y-2 rounded-lg border border-line bg-white p-4">
+          <div className="flex flex-wrap gap-2">
+            <input
+              type="password"
+              value={syncToken}
+              onChange={(e) => setSyncToken(e.target.value)}
+              placeholder="GitHub token (gist scope)"
+              className="min-w-0 flex-1 rounded-md border border-line px-3 py-1.5 text-sm placeholder:text-ink-3"
+            />
+            <input
+              value={syncGist}
+              onChange={(e) => setSyncGist(e.target.value)}
+              placeholder="Gist ID (filled after first push)"
+              className="w-64 rounded-md border border-line px-3 py-1.5 text-sm placeholder:text-ink-3"
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              type="password"
+              value={syncPass}
+              onChange={(e) => setSyncPass(e.target.value)}
+              placeholder="Presidency passphrase"
+              className="min-w-0 flex-1 rounded-md border border-line px-3 py-1.5 text-sm placeholder:text-ink-3"
+            />
+            <button
+              onClick={doPush}
+              disabled={syncBusy}
+              className="rounded-md bg-primary px-4 py-1.5 text-sm font-semibold text-white hover:bg-primary-dark disabled:opacity-50"
+            >
+              {syncBusy ? "Working…" : "Push"}
+            </button>
+            <button
+              onClick={doPull}
+              disabled={syncBusy}
+              className="rounded-md border border-line-2 px-4 py-1.5 text-sm font-semibold text-ink hover:bg-surface disabled:opacity-50"
+            >
+              Pull
+            </button>
+            {syncMsg && <span className="text-sm text-ink-2">{syncMsg}</span>}
+          </div>
+          <p className="text-xs text-ink-3">
+            Setup once: the president creates a fine-grained GitHub token
+            (Settings → Developer settings → Tokens, <em>gists only</em>),
+            pushes, then shares the token, gist ID, and passphrase with
+            counselors in person or by AirDrop. Last push wins — push after
+            you make changes, pull before you rely on them. The token stays
+            on this device and is never included in Export files.
           </p>
         </div>
       </section>

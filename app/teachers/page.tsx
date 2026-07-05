@@ -130,20 +130,52 @@ export default function TeachersPage() {
     exportData();
   }
 
+  // Handles plain "Name, phone" lines AND LCR-style exports: tab-separated
+  // columns with "Last, First" names, emails, and phones in any order.
+  function parsePastedLine(line: string) {
+    const cells = (
+      line.includes("\t") ? line.split("\t") : line.split(",")
+    )
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (cells.length === 0) return null;
+
+    let phone: string | undefined;
+    let email: string | undefined;
+    const nameParts: string[] = [];
+    for (const cell of cells) {
+      if (!email && cell.includes("@")) email = cell;
+      else if (!phone && (cell.match(/\d/g)?.length ?? 0) >= 7) phone = cell;
+      else nameParts.push(cell);
+    }
+    if (nameParts.length === 0) return null;
+
+    let name = nameParts.join(", ");
+    // Comma-only line like "Munns, Jaxon" arrives as two name cells — or a
+    // single tab cell "Munns, Jaxon" — either way, flip Last, First.
+    const flip = name.match(/^([A-Za-zÀ-ÿ'’-]+),\s*(.+)$/);
+    if (flip && !line.includes("\t") && nameParts.length === 2)
+      name = `${nameParts[1]} ${nameParts[0]}`;
+    else if (flip && line.includes("\t")) name = `${flip[2]} ${flip[1]}`;
+
+    return { name, phone, email };
+  }
+
   function importPasted() {
     const rows = pasteText
       .split("\n")
-      .map((line) => line.split(/\t|,/).map((s) => s.trim()))
-      .filter((parts) => parts[0]);
+      .map(parsePastedLine)
+      .filter((r): r is NonNullable<typeof r> => r !== null);
     if (rows.length === 0) return;
     update((d) => ({
       ...d,
       teachers: [
         ...d.teachers,
-        ...rows.map(([name, phone]) => ({
+        ...rows.map((r) => ({
           id: uid(),
-          name,
-          phone: phone || undefined,
+          name: r.name,
+          phone: r.phone,
+          email: r.email,
         })),
       ],
     }));

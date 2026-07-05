@@ -116,9 +116,19 @@ export type Meeting = {
   }[];
 };
 
+// A counselor's class visit — feeds the rotation and teacher councils.
+export type Visit = {
+  id: string;
+  classId: string;
+  date: string; // ISO
+  by: PresidencyRole;
+  note?: string; // what went well
+};
+
 export type AppData = {
   schemaVersion?: number;
   meetings: Meeting[];
+  visits: Visit[];
   teachers: Teacher[];
   classes: SSClass[];
   overrides: Override[];
@@ -134,7 +144,7 @@ export type AppData = {
   candidates: Candidate[];
 };
 
-const SCHEMA_VERSION = 4;
+const SCHEMA_VERSION = 5;
 
 const KEY = "sunday-school-v1";
 
@@ -151,6 +161,7 @@ const DEFAULT_DATA: AppData = {
   councils: [],
   candidates: [],
   meetings: [],
+  visits: [],
 };
 
 export function uid(): string {
@@ -216,6 +227,7 @@ export function migrate(raw: unknown): AppData {
     councils: Array.isArray(d.councils) ? d.councils : [],
     candidates: Array.isArray(d.candidates) ? d.candidates : [],
     meetings: Array.isArray(d.meetings) ? d.meetings : [],
+    visits: Array.isArray(d.visits) ? d.visits : [],
   };
 }
 
