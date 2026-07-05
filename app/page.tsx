@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import LessonArt, { artworkFor } from "@/components/LessonArt";
+import { kitFor, kitMessage } from "@/lib/kits";
 import { LESSONS, formatSunday, lessonUrl, occurrenceLabel, parseISODate } from "@/lib/lessons";
 import {
   CARE_THRESHOLD,
@@ -40,6 +41,32 @@ export default function Dashboard() {
   const careAlert = teacherLoads(data).find(
     (l) => l.streak + (l.scheduledNext ? 1 : 0) >= CARE_THRESHOLD
   );
+
+  // Sunday-evening kit targets the teaching Sunday strictly AFTER today,
+  // so on Sunday night it points at next week, not this morning.
+  const kitTarget = LESSONS.find(
+    (l) =>
+      parseISODate(l.sunday) > today &&
+      isTeachingSunday(l.sunday, data.settings.meetWeeks)
+  );
+  const kit = kitTarget ? kitFor(kitTarget.week) : undefined;
+  const kitRecipients = kitTarget
+    ? [
+        ...new Map(
+          data.classes
+            .flatMap((cls) => {
+              const ov = data.overrides.find(
+                (o) => o.sunday === kitTarget.sunday && o.classId === cls.id
+              );
+              const ids = ov?.teacherId ? [ov.teacherId] : cls.teacherIds;
+              return ids
+                .map((id) => data.teachers.find((t) => t.id === id))
+                .filter((t): t is NonNullable<typeof t> => Boolean(t?.phone));
+            })
+            .map((t) => [t.id, t])
+        ).values(),
+      ]
+    : [];
 
   function seedClasses() {
     update((d) => ({
@@ -211,6 +238,68 @@ export default function Dashboard() {
           under the new second-hour schedule. The schedule switches over
           automatically.
         </div>
+      )}
+
+      {kitTarget && data.classes.length > 0 && (
+        <section className="overflow-hidden rounded-lg border border-line bg-white">
+          <div className="flex items-stretch">
+            <div className="hidden w-32 shrink-0 sm:block">
+              <LessonArt week={kitTarget.week} className="h-full w-full" />
+            </div>
+            <div className="min-w-0 flex-1 p-5">
+              <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-ink-3">
+                Sunday evening kit · for {formatSunday(kitTarget.sunday)}
+              </p>
+              <p className="mt-1.5 font-serif font-bold">{kitTarget.ref}</p>
+              {kit ? (
+                <>
+                  {kit.talkTitle && (
+                    <p className="mt-1 text-sm text-ink-2">
+                      One extra:{" "}
+                      <a
+                        href={kit.talkUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-semibold text-primary hover:underline"
+                      >
+                        &ldquo;{kit.talkTitle}&rdquo;
+                      </a>{" "}
+                      — {kit.talkSpeaker}
+                    </p>
+                  )}
+                  <p className="mt-1.5 border-l-2 border-primary/30 pl-3 text-sm italic text-ink-2">
+                    {kit.question}
+                  </p>
+                </>
+              ) : (
+                <p className="mt-1 text-sm text-ink-3">
+                  No kit drafted for this week yet — the message still sends
+                  the lesson link and artwork.
+                </p>
+              )}
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {kitRecipients.length === 0 ? (
+                  <p className="text-xs text-ink-3">
+                    Add teacher phone numbers to send the kit by text.
+                  </p>
+                ) : (
+                  kitRecipients.map((t) => (
+                    <a
+                      key={t.id}
+                      href={smsHref(
+                        t.phone!,
+                        kitMessage({ teacherName: t.name, week: kitTarget.week })
+                      )}
+                      className="rounded-md border border-line-2 px-3 py-1 text-xs font-semibold text-primary hover:bg-primary-soft"
+                    >
+                      Text {t.name.split(" ").slice(-1)[0]}
+                    </a>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
       )}
 
       {comingUp.length > 0 && (

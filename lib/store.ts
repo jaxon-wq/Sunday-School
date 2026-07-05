@@ -71,6 +71,7 @@ export const DEFAULT_CHECKLIST: ChecklistItem[] = [
   { id: "official-roll", label: "After class: attendance marked in Member Tools (the official roll) — confirm each teacher recorded their class", assignedTo: "Secretary" },
   { id: "council-notes", label: "After class: note follow-ups and anything for ward council", assignedTo: "Secretary" },
   { id: "thank-teacher", label: "Sunday evening: thank one teacher by text", assignedTo: "President" },
+  { id: "send-kit", label: "Sunday evening: send teachers next week's kit (lesson link, one extra, one question)", assignedTo: "President" },
 ];
 
 // A teacher council meeting (Handbook 13; Teaching in the Savior's Way)
@@ -118,7 +119,7 @@ export type AppData = {
   candidates: Candidate[];
 };
 
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 
 const KEY = "sunday-school-v1";
 
@@ -158,6 +159,14 @@ export function migrate(raw: unknown): AppData {
       const at = checklistItems.findIndex((i) => i.id === "council-notes");
       checklistItems = [...checklistItems];
       checklistItems.splice(at === -1 ? checklistItems.length : at, 0, rollItem);
+    }
+  }
+
+  // v3: the Sunday-evening teacher kit becomes part of the rhythm.
+  if ((d.schemaVersion ?? 1) < 3) {
+    if (!checklistItems.some((i) => i.id === "send-kit")) {
+      const kitItem = DEFAULT_CHECKLIST.find((i) => i.id === "send-kit")!;
+      checklistItems = [...checklistItems, kitItem];
     }
   }
 
