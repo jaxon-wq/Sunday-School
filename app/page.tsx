@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import LessonArt, { artworkFor } from "@/components/LessonArt";
 import { kitFor, kitMessage } from "@/lib/kits";
@@ -26,6 +27,17 @@ const STARTER_CLASSES = [
 
 export default function Dashboard() {
   const { data, update } = useAppData();
+  const [ctxTip, setCtxTip] = useState(false);
+  useEffect(() => {
+    // Safari tabs and the home-screen app keep SEPARATE copies of the data.
+    // Warn once when this looks like a phone browser (not the installed app).
+    const standalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (navigator as unknown as { standalone?: boolean }).standalone === true;
+    const touch = "ontouchstart" in window;
+    if (!standalone && touch && !localStorage.getItem("ss-ctx-tip-dismissed"))
+      setCtxTip(true);
+  }, []);
   if (!data) return null;
 
   const today = todayStart();
@@ -102,6 +114,27 @@ export default function Dashboard() {
               Add classes manually
             </Link>
           </div>
+        </div>
+      )}
+
+      {ctxTip && (
+        <div className="flex items-start justify-between gap-3 rounded-lg border border-line bg-surface px-4 py-3 text-sm text-ink-2">
+          <p>
+            <span className="font-semibold text-ink">Heads up:</span> the
+            browser and the home-screen app keep{" "}
+            <span className="font-semibold">separate copies</span> of your
+            data. Do your data entry in the home-screen app, and use
+            Export/Import to move data between them.
+          </p>
+          <button
+            onClick={() => {
+              localStorage.setItem("ss-ctx-tip-dismissed", "1");
+              setCtxTip(false);
+            }}
+            className="shrink-0 text-xs font-semibold text-primary hover:underline"
+          >
+            Got it
+          </button>
         </div>
       )}
 

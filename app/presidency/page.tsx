@@ -6,16 +6,28 @@ import {
   CARE_THRESHOLD,
   CARE_WATCH,
   ChecklistItem,
+  Meeting,
   PRESIDENCY_ROLES,
   PresidencyRole,
   isTeachingSunday,
   offerBreakMessage,
   smsHref,
   teacherLoads,
+  todayISO,
   todayStart,
   uid,
   useAppData,
 } from "@/lib/store";
+
+// Standing agenda for presidency meetings, Handbook 13-informed.
+const MEETING_AGENDA = [
+  "Review assignments from the last meeting",
+  "Teachers and classes — who needs support, a break, or a substitute plan",
+  "Upcoming lessons and Sunday-evening kits",
+  "Teacher council — next date and topic",
+  "Ward council — what the president should raise",
+  "New teachers in process (pipeline and callings)",
+];
 
 // Adapted from General Handbook ch. 13 (Sunday School).
 const RESPONSIBILITIES: { role: string; duties: string[] }[] = [
@@ -68,6 +80,11 @@ export default function PresidencyPage() {
   const [pin2, setPin2] = useState("");
   const [pinMsg, setPinMsg] = useState("");
   const [pinBusy, setPinBusy] = useState(false);
+  const [meetingDate, setMeetingDate] = useState("");
+  const [newAction, setNewAction] = useState<Record<string, string>>({});
+  const [newActionOwner, setNewActionOwner] = useState<
+    Record<string, PresidencyRole | "Everyone">
+  >({});
   if (!data) return null;
 
   async function savePin(e: React.FormEvent) {
@@ -276,6 +293,199 @@ export default function PresidencyPage() {
           The checklist resets automatically each teaching Sunday. Checked items
           are saved per date.
         </p>
+      </section>
+
+      {/* Presidency meetings */}
+      <section>
+        <h2 className="mb-1 font-serif text-xl font-bold">
+          Presidency meetings
+        </h2>
+        <p className="mb-3 text-sm text-ink-2">
+          A standing agenda, notes, and assignments that don&apos;t get lost
+          between meetings.
+        </p>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!meetingDate) return;
+            const m: Meeting = {
+              id: uid(),
+              date: meetingDate,
+              notes: "",
+              actions: [],
+            };
+            update((d) => ({ ...d, meetings: [...d.meetings, m] }));
+            setMeetingDate("");
+          }}
+          className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-line bg-surface p-3"
+        >
+          <input
+            type="date"
+            value={meetingDate}
+            onChange={(e) => setMeetingDate(e.target.value)}
+            className="rounded-md border border-line bg-white px-3 py-1.5 text-sm"
+          />
+          <button
+            type="submit"
+            className="rounded-md bg-primary px-4 py-1.5 text-sm font-semibold text-white hover:bg-primary-dark"
+          >
+            Schedule meeting
+          </button>
+          <span className="text-xs text-ink-3">
+            A good rhythm is monthly, or biweekly through the September
+            transition.
+          </span>
+        </form>
+
+        <div className="space-y-4">
+          {data.meetings.length === 0 && (
+            <p className="text-sm text-ink-3">No meetings yet.</p>
+          )}
+          {[...data.meetings]
+            .sort((a, b) => b.date.localeCompare(a.date))
+            .map((m) => {
+              const patch = (p: Partial<Meeting>) =>
+                update((d) => ({
+                  ...d,
+                  meetings: d.meetings.map((x) =>
+                    x.id === m.id ? { ...x, ...p } : x
+                  ),
+                }));
+              const upcoming = m.date >= todayISO();
+              return (
+                <div
+                  key={m.id}
+                  className={`rounded-lg border bg-white p-5 ${
+                    upcoming ? "border-primary/40" : "border-line"
+                  }`}
+                >
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <h3 className="font-serif text-lg font-bold">
+                      {new Date(m.date + "T12:00:00").toLocaleDateString(
+                        "en-US",
+                        { weekday: "long", month: "long", day: "numeric" }
+                      )}
+                    </h3>
+                    <button
+                      onClick={() =>
+                        update((d) => ({
+                          ...d,
+                          meetings: d.meetings.filter((x) => x.id !== m.id),
+                        }))
+                      }
+                      className="text-xs text-ink-3 hover:text-danger"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                  {upcoming && (
+                    <ul className="mt-3 space-y-1">
+                      {MEETING_AGENDA.map((a) => (
+                        <li
+                          key={a}
+                          className="flex gap-2 text-sm text-ink-2"
+                        >
+                          <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary" />
+                          {a}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <textarea
+                    value={m.notes}
+                    onChange={(e) => patch({ notes: e.target.value })}
+                    placeholder="Notes…"
+                    rows={2}
+                    className="mt-3 w-full rounded-md border border-line px-3 py-2 text-sm placeholder:text-ink-3"
+                  />
+                  <div className="mt-3">
+                    <p className="text-xs font-bold uppercase tracking-wider text-ink-3">
+                      Assignments
+                    </p>
+                    {m.actions.map((a) => (
+                      <label
+                        key={a.id}
+                        className="mt-1.5 flex items-center gap-2 text-sm"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={a.done}
+                          onChange={() =>
+                            patch({
+                              actions: m.actions.map((x) =>
+                                x.id === a.id ? { ...x, done: !x.done } : x
+                              ),
+                            })
+                          }
+                          className="accent-primary"
+                        />
+                        <span
+                          className={a.done ? "text-ink-3 line-through" : ""}
+                        >
+                          {a.text}
+                        </span>
+                        <span className="ml-auto shrink-0 rounded bg-surface-2 px-2 py-0.5 text-xs font-medium text-ink-2">
+                          {ownerName(a.assignedTo)}
+                        </span>
+                      </label>
+                    ))}
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <input
+                        value={newAction[m.id] ?? ""}
+                        onChange={(e) =>
+                          setNewAction((s) => ({
+                            ...s,
+                            [m.id]: e.target.value,
+                          }))
+                        }
+                        placeholder="Add an assignment…"
+                        className="min-w-0 flex-1 rounded-md border border-line px-3 py-1.5 text-sm placeholder:text-ink-3"
+                      />
+                      <select
+                        value={newActionOwner[m.id] ?? "President"}
+                        onChange={(e) =>
+                          setNewActionOwner((s) => ({
+                            ...s,
+                            [m.id]: e.target.value as
+                              | PresidencyRole
+                              | "Everyone",
+                          }))
+                        }
+                        className="rounded-md border border-line bg-white px-2 py-1.5 text-sm"
+                      >
+                        {[...PRESIDENCY_ROLES, "Everyone"].map((r) => (
+                          <option key={r} value={r}>
+                            {r}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => {
+                          const text = (newAction[m.id] ?? "").trim();
+                          if (!text) return;
+                          patch({
+                            actions: [
+                              ...m.actions,
+                              {
+                                id: uid(),
+                                text,
+                                assignedTo: newActionOwner[m.id] ?? "President",
+                                done: false,
+                              },
+                            ],
+                          });
+                          setNewAction((s) => ({ ...s, [m.id]: "" }));
+                        }}
+                        className="rounded-md border border-line-2 px-3 py-1.5 text-sm font-semibold text-primary hover:bg-primary-soft"
+                      >
+                        Add
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+        </div>
       </section>
 
       {/* Teacher care */}

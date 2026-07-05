@@ -65,8 +65,8 @@ export const DEFAULT_CHECKLIST: ChecklistItem[] = [
   { id: "confirm-teachers", label: "Thursday: confirm every class has a teacher for Sunday", assignedTo: "President" },
   { id: "arrange-subs", label: "Friday: arrange substitutes for any gaps", assignedTo: "First Counselor" },
   { id: "check-in", label: "Saturday: check in with any new or struggling teachers", assignedTo: "Second Counselor" },
-  { id: "rooms-ready", label: "Sunday 8:40 — classrooms unlocked, chairs and materials ready", assignedTo: "Second Counselor" },
-  { id: "greet-teachers", label: "Sunday 8:50 — greet each teacher before class", assignedTo: "President" },
+  { id: "rooms-ready", label: "Sunday, 20 min before church — classrooms unlocked, chairs and materials ready", assignedTo: "Second Counselor" },
+  { id: "greet-teachers", label: "Sunday, 10 min before church — greet each teacher before class", assignedTo: "President" },
   { id: "visit-class", label: "During class: visit one class (rotate weekly) and note what went well", assignedTo: "First Counselor" },
   { id: "official-roll", label: "After class: attendance marked in Member Tools (the official roll) — confirm each teacher recorded their class", assignedTo: "Secretary" },
   { id: "council-notes", label: "After class: note follow-ups and anything for ward council", assignedTo: "Secretary" },
@@ -102,8 +102,23 @@ export type Candidate = {
   note?: string;
 };
 
+// Presidency meeting: standing agenda, notes, and assignments that carry
+// forward until done.
+export type Meeting = {
+  id: string;
+  date: string; // ISO
+  notes: string;
+  actions: {
+    id: string;
+    text: string;
+    assignedTo: PresidencyRole | "Everyone";
+    done: boolean;
+  }[];
+};
+
 export type AppData = {
   schemaVersion?: number;
+  meetings: Meeting[];
   teachers: Teacher[];
   classes: SSClass[];
   overrides: Override[];
@@ -119,7 +134,7 @@ export type AppData = {
   candidates: Candidate[];
 };
 
-const SCHEMA_VERSION = 3;
+const SCHEMA_VERSION = 4;
 
 const KEY = "sunday-school-v1";
 
@@ -135,6 +150,7 @@ const DEFAULT_DATA: AppData = {
   attendance: {},
   councils: [],
   candidates: [],
+  meetings: [],
 };
 
 export function uid(): string {
@@ -170,6 +186,20 @@ export function migrate(raw: unknown): AppData {
     }
   }
 
+  // v4: default checklist times become relative to church start (wards
+  // meet at different hours). Only rewrites labels still at the old default.
+  if ((d.schemaVersion ?? 1) < 4) {
+    const oldLabels: Record<string, string> = {
+      "rooms-ready": "Sunday 8:40 — classrooms unlocked, chairs and materials ready",
+      "greet-teachers": "Sunday 8:50 — greet each teacher before class",
+    };
+    checklistItems = checklistItems.map((i) =>
+      oldLabels[i.id] === i.label
+        ? { ...i, label: DEFAULT_CHECKLIST.find((x) => x.id === i.id)!.label }
+        : i
+    );
+  }
+
   return {
     ...DEFAULT_DATA,
     ...d,
@@ -185,6 +215,7 @@ export function migrate(raw: unknown): AppData {
     attendance: d.attendance ?? {},
     councils: Array.isArray(d.councils) ? d.councils : [],
     candidates: Array.isArray(d.candidates) ? d.candidates : [],
+    meetings: Array.isArray(d.meetings) ? d.meetings : [],
   };
 }
 
