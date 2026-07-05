@@ -82,6 +82,12 @@ It is built for three recurring moments:
   never names**. Named attendance rolls belong to Member Tools/LCR, the Church's
   system of record; we do not duplicate them (principles 6, 7, 9). A "who needs
   noticing" layer may come later, designed as carefully as this document was.
+- **Passcode, not logins** (decided July 2026): the public site holds no ward data —
+  each device holds its own copy, so protection lives at the device: an optional
+  per-device passcode encrypts everything at rest (AES-GCM; forgotten passcode =
+  unrecoverable, by design). Real user accounts arrive together with sync, not
+  before — a login on a static site would be security theater, and we don't do
+  theater.
 
 ## The test
 

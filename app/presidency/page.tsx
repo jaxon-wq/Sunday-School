@@ -59,12 +59,34 @@ const RESPONSIBILITIES: { role: string; duties: string[] }[] = [
 ];
 
 export default function PresidencyPage() {
-  const { data, update } = useAppData();
+  const { data, update, lockEnabled, enableLock, disableLock } = useAppData();
   const [newItem, setNewItem] = useState("");
   const [newOwner, setNewOwner] = useState<PresidencyRole | "Everyone">(
     "President"
   );
+  const [pin1, setPin1] = useState("");
+  const [pin2, setPin2] = useState("");
+  const [pinMsg, setPinMsg] = useState("");
+  const [pinBusy, setPinBusy] = useState(false);
   if (!data) return null;
+
+  async function savePin(e: React.FormEvent) {
+    e.preventDefault();
+    if (pin1.length < 4) {
+      setPinMsg("Use at least 4 characters.");
+      return;
+    }
+    if (pin1 !== pin2) {
+      setPinMsg("Those don't match.");
+      return;
+    }
+    setPinBusy(true);
+    await enableLock(pin1);
+    setPinBusy(false);
+    setPin1("");
+    setPin2("");
+    setPinMsg(lockEnabled ? "Passcode changed." : "Passcode on — data on this device is now encrypted.");
+  }
 
   const today = todayStart();
   const upcomingTeaching = LESSONS.filter(
@@ -333,6 +355,62 @@ export default function PresidencyPage() {
             </div>
           );
         })()}
+      </section>
+
+      {/* Security */}
+      <section>
+        <h2 className="mb-1 font-serif text-xl font-bold">Passcode</h2>
+        <p className="mb-3 text-sm text-ink-2">
+          {lockEnabled
+            ? "Passcode is on. Everything this app stores on this device is encrypted — without the passcode it's unreadable."
+            : "Optional: set a passcode and everything this app stores on this device is encrypted. You'll enter it once each time you open the app."}
+        </p>
+        <div className="rounded-lg border border-line bg-white p-4">
+          <form onSubmit={savePin} className="flex flex-wrap items-center gap-2">
+            <input
+              type="password"
+              value={pin1}
+              onChange={(e) => setPin1(e.target.value)}
+              placeholder={lockEnabled ? "New passcode" : "Passcode"}
+              className="w-40 rounded-md border border-line px-3 py-1.5 text-sm placeholder:text-ink-3"
+            />
+            <input
+              type="password"
+              value={pin2}
+              onChange={(e) => setPin2(e.target.value)}
+              placeholder="Repeat it"
+              className="w-40 rounded-md border border-line px-3 py-1.5 text-sm placeholder:text-ink-3"
+            />
+            <button
+              type="submit"
+              disabled={pinBusy}
+              className="rounded-md bg-primary px-4 py-1.5 text-sm font-semibold text-white hover:bg-primary-dark disabled:opacity-50"
+            >
+              {pinBusy ? "Working…" : lockEnabled ? "Change passcode" : "Turn on"}
+            </button>
+            {lockEnabled && (
+              <button
+                type="button"
+                onClick={() => {
+                  disableLock();
+                  setPinMsg("Passcode off — data stored unencrypted again.");
+                }}
+                className="rounded-md border border-line-2 px-4 py-1.5 text-sm font-semibold text-ink hover:bg-surface"
+              >
+                Turn off
+              </button>
+            )}
+            {pinMsg && <span className="text-sm text-ink-2">{pinMsg}</span>}
+          </form>
+          <p className="mt-3 text-xs text-ink-3">
+            Each device sets its own passcode — have your counselors set one
+            too. If a passcode is forgotten the data can&apos;t be recovered
+            (that&apos;s the point), so keep an exported backup somewhere safe.
+            Note: exported and shared files are unencrypted — treat them like
+            a paper roster. The website itself holds no ward data; this
+            protects the copy on each device.
+          </p>
+        </div>
       </section>
 
       {/* Roles & responsibilities */}

@@ -1,6 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import {
+  decryptJson,
+  deriveKey,
+  encryptJson,
+  isLockedBlob,
+  randomSaltB64,
+  unb64,
+} from "./crypto";
 import { LESSONS, parseISODate, sundayOccurrence } from "./lessons";
 
 export type Teacher = {
@@ -158,32 +166,144 @@ export function todayISO(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+// The derived key lives only in memory for the session: client-side
+// navigation keeps it; closing or relaunching the app requires the
+// passcode again.
+let sessionKey: CryptoKey | null = null;
+let sessionSalt: string | null = null;
+
+export type LockState = "loading" | "locked" | "ready";
+
 export function useAppData() {
   const [data, setData] = useState<AppData | null>(null);
+  const [lockState, setLockState] = useState<LockState>("loading");
+  const [lockEnabled, setLockEnabled] = useState(false);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(KEY);
-      setData(raw ? migrate(JSON.parse(raw)) : DEFAULT_DATA);
-    } catch {
-      setData(DEFAULT_DATA);
-    }
+    (async () => {
+      try {
+        const raw = localStorage.getItem(KEY);
+        if (!raw) {
+          setData(DEFAULT_DATA);
+          setLockState("ready");
+          return;
+        }
+        const parsed = JSON.parse(raw);
+        if (isLockedBlob(parsed)) {
+          setLockEnabled(true);
+          if (sessionKey) {
+            try {
+              const obj = await decryptJson(sessionKey, parsed);
+              setData(migrate(obj));
+              setLockState("ready");
+              return;
+            } catch {
+              sessionKey = null;
+              sessionSalt = null;
+            }
+          }
+          setLockState("locked");
+          return;
+        }
+        setData(migrate(parsed));
+        setLockState("ready");
+      } catch {
+        setData(DEFAULT_DATA);
+        setLockState("ready");
+      }
+    })();
   }, []);
 
-  const update = useCallback((fn: (d: AppData) => AppData) => {
-    setData((prev) => {
-      if (!prev) return prev;
-      const next = fn(prev);
+  const persist = useCallback((next: AppData) => {
+    if (sessionKey && sessionSalt) {
+      const key = sessionKey;
+      const salt = sessionSalt;
+      encryptJson(key, salt, next)
+        .then((blob) => localStorage.setItem(KEY, JSON.stringify(blob)))
+        .catch(() => {
+          // encryption failed; keep in-memory state rather than write plaintext
+        });
+    } else {
       try {
         localStorage.setItem(KEY, JSON.stringify(next));
       } catch {
         // storage full or unavailable; keep in-memory state
       }
-      return next;
-    });
+    }
   }, []);
 
-  return { data, update };
+  const update = useCallback(
+    (fn: (d: AppData) => AppData) => {
+      setData((prev) => {
+        if (!prev) return prev;
+        const next = fn(prev);
+        persist(next);
+        return next;
+      });
+    },
+    [persist]
+  );
+
+  const unlock = useCallback(async (pin: string): Promise<boolean> => {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (!raw) return false;
+      const blob = JSON.parse(raw);
+      if (!isLockedBlob(blob)) return false;
+      const key = await deriveKey(pin, unb64(blob.salt));
+      const obj = await decryptJson(key, blob); // throws on wrong passcode
+      sessionKey = key;
+      sessionSalt = blob.salt;
+      setData(migrate(obj));
+      setLockState("ready");
+      return true;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  const enableLock = useCallback(
+    async (pin: string) => {
+      if (!data) return;
+      const salt = randomSaltB64();
+      const key = await deriveKey(pin, unb64(salt));
+      sessionKey = key;
+      sessionSalt = salt;
+      const blob = await encryptJson(key, salt, data);
+      localStorage.setItem(KEY, JSON.stringify(blob));
+      setLockEnabled(true);
+    },
+    [data]
+  );
+
+  const disableLock = useCallback(() => {
+    if (!data) return;
+    sessionKey = null;
+    sessionSalt = null;
+    localStorage.setItem(KEY, JSON.stringify(data));
+    setLockEnabled(false);
+  }, [data]);
+
+  // Forgotten passcode: the data is unrecoverable by design — start over.
+  const wipe = useCallback(() => {
+    sessionKey = null;
+    sessionSalt = null;
+    localStorage.removeItem(KEY);
+    setData(DEFAULT_DATA);
+    setLockEnabled(false);
+    setLockState("ready");
+  }, []);
+
+  return {
+    data,
+    update,
+    lockState,
+    lockEnabled,
+    unlock,
+    enableLock,
+    disableLock,
+    wipe,
+  };
 }
 
 // Per the First Presidency announcement (March 2026), the alternating-week
