@@ -245,6 +245,7 @@ export default function SchedulePage() {
                                     className: cls.name,
                                     sundayLabel: sundayShort,
                                     lessonRef: lesson.ref,
+                                    lessonUrl: lessonUrl(lesson.week),
                                     fromName: president?.name || undefined,
                                   })
                                 : regularTeacher
@@ -253,6 +254,7 @@ export default function SchedulePage() {
                                       className: cls.name,
                                       sundayLabel: sundayShort,
                                       lessonRef: lesson.ref,
+                                      lessonUrl: lessonUrl(lesson.week),
                                     })
                                   : "";
                               return (

@@ -400,12 +400,14 @@ export function subRequestMessage(opts: {
   className: string;
   sundayLabel: string;
   lessonRef: string;
+  lessonUrl?: string;
   fromName?: string;
 }): string {
   const from = opts.fromName ? ` –${opts.fromName}` : "";
+  const link = opts.lessonUrl ? ` Lesson is right here: ${opts.lessonUrl}` : "";
   return (
     `Hi ${firstName(opts.teacherName)}, could you cover the ${opts.className} class ` +
-    `on ${opts.sundayLabel}? The lesson is ${opts.lessonRef} in Come, Follow Me. ` +
+    `on ${opts.sundayLabel}? It's ${opts.lessonRef} in Come, Follow Me.${link} ` +
     `No pressure if you can't — just let me know either way. Thank you!${from}`
   );
 }
@@ -478,10 +480,12 @@ export function reminderMessage(opts: {
   className: string;
   sundayLabel: string;
   lessonRef: string;
+  lessonUrl?: string;
 }): string {
+  const link = opts.lessonUrl ? ` One tap to the lesson: ${opts.lessonUrl}` : "";
   return (
     `Hi ${firstName(opts.teacherName)}, just a friendly reminder that you're ` +
     `teaching ${opts.className} on ${opts.sundayLabel} — the lesson is ` +
-    `${opts.lessonRef}. Thank you for all you do!`
+    `${opts.lessonRef}.${link} Thank you for all you do!`
   );
 }
