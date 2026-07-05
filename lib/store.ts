@@ -68,6 +68,7 @@ export const DEFAULT_CHECKLIST: ChecklistItem[] = [
   { id: "rooms-ready", label: "Sunday 8:40 — classrooms unlocked, chairs and materials ready", assignedTo: "Second Counselor" },
   { id: "greet-teachers", label: "Sunday 8:50 — greet each teacher before class", assignedTo: "President" },
   { id: "visit-class", label: "During class: visit one class (rotate weekly) and note what went well", assignedTo: "First Counselor" },
+  { id: "official-roll", label: "After class: attendance marked in Member Tools (the official roll) — confirm each teacher recorded their class", assignedTo: "Secretary" },
   { id: "council-notes", label: "After class: note follow-ups and anything for ward council", assignedTo: "Secretary" },
   { id: "thank-teacher", label: "Sunday evening: thank one teacher by text", assignedTo: "President" },
 ];
@@ -101,6 +102,7 @@ export type Candidate = {
 };
 
 export type AppData = {
+  schemaVersion?: number;
   teachers: Teacher[];
   classes: SSClass[];
   overrides: Override[];
@@ -115,6 +117,8 @@ export type AppData = {
   councils: Council[];
   candidates: Candidate[];
 };
+
+const SCHEMA_VERSION = 2;
 
 const KEY = "sunday-school-v1";
 
@@ -141,18 +145,32 @@ export function uid(): string {
 // Merge stored data over defaults so older saves gain new fields.
 export function migrate(raw: unknown): AppData {
   const d = (raw ?? {}) as Partial<AppData>;
+  let checklistItems =
+    Array.isArray(d.checklistItems) && d.checklistItems.length > 0
+      ? d.checklistItems
+      : DEFAULT_CHECKLIST;
+
+  // v2: the official Member Tools roll is a Handbook duty (13.2.1) —
+  // add the checklist item once for pre-v2 saves; deletions after that stick.
+  if ((d.schemaVersion ?? 1) < 2) {
+    if (!checklistItems.some((i) => i.id === "official-roll")) {
+      const rollItem = DEFAULT_CHECKLIST.find((i) => i.id === "official-roll")!;
+      const at = checklistItems.findIndex((i) => i.id === "council-notes");
+      checklistItems = [...checklistItems];
+      checklistItems.splice(at === -1 ? checklistItems.length : at, 0, rollItem);
+    }
+  }
+
   return {
     ...DEFAULT_DATA,
     ...d,
+    schemaVersion: SCHEMA_VERSION,
     settings: { ...DEFAULT_DATA.settings, ...(d.settings ?? {}) },
     presidency:
       Array.isArray(d.presidency) && d.presidency.length === 4
         ? d.presidency
         : DEFAULT_DATA.presidency,
-    checklistItems:
-      Array.isArray(d.checklistItems) && d.checklistItems.length > 0
-        ? d.checklistItems
-        : DEFAULT_CHECKLIST,
+    checklistItems,
     checklist: d.checklist ?? {},
     weekNotes: d.weekNotes ?? {},
     attendance: d.attendance ?? {},
