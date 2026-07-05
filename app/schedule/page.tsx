@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import LessonArt from "@/components/LessonArt";
-import { LESSONS, Lesson, formatSunday, occurrenceLabel, parseISODate } from "@/lib/lessons";
+import { LESSONS, Lesson, formatSunday, lessonUrl, occurrenceLabel, parseISODate } from "@/lib/lessons";
 import {
   MeetWeeks,
   NEW_SCHEDULE_START,
@@ -174,15 +174,19 @@ export default function SchedulePage() {
                       <span className="font-serif text-lg font-bold">
                         {sundayShort}
                       </span>
-                      <span
-                        className={`text-sm ${
+                      <a
+                        href={lessonUrl(lesson.week)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`text-sm hover:text-primary hover:underline ${
                           lesson.special
                             ? "font-semibold text-primary"
                             : "text-ink-2"
                         }`}
+                        title="Open this lesson in Come, Follow Me"
                       >
                         {lesson.ref}
-                      </span>
+                      </a>
                       <span className="ml-auto flex items-center gap-2">
                         {lesson.sunday === "2026-08-30" && (
                           <span className="rounded bg-primary-soft px-2 py-0.5 text-xs font-semibold text-primary">

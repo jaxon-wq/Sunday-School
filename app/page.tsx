@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import LessonArt, { artworkFor } from "@/components/LessonArt";
-import { LESSONS, formatSunday, occurrenceLabel, parseISODate } from "@/lib/lessons";
+import { LESSONS, formatSunday, lessonUrl, occurrenceLabel, parseISODate } from "@/lib/lessons";
 import {
   CARE_THRESHOLD,
   NEW_SCHEDULE_START,
@@ -142,7 +142,16 @@ export default function Dashboard() {
             <h1 className="mt-2 font-serif text-3xl font-bold tracking-tight sm:text-4xl">
               {formatSunday(next.sunday)}
             </h1>
-            <p className="mt-1 font-serif text-lg text-ink-2">{next.ref}</p>
+            <p className="mt-1 font-serif text-lg">
+              <a
+                href={lessonUrl(next.week)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-ink-2 hover:text-primary hover:underline"
+              >
+                {next.ref}
+              </a>
+            </p>
             {data.weekNotes[next.sunday] && (
               <p className="mt-3 inline-block rounded-md bg-primary-soft px-3 py-1.5 text-sm text-primary-dark">
                 {data.weekNotes[next.sunday]}
@@ -239,12 +248,19 @@ export default function Dashboard() {
                     <p className="mt-1 font-serif font-bold">
                       {formatSunday(l.sunday).replace("Sunday, ", "")}
                     </p>
-                    <p
-                      className={`mt-0.5 line-clamp-2 text-xs ${
-                        l.special ? "font-semibold text-primary" : "text-ink-2"
-                      }`}
-                    >
-                      {l.ref}
+                    <p className="mt-0.5 line-clamp-2 text-xs">
+                      <a
+                        href={lessonUrl(l.week)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`hover:text-primary hover:underline ${
+                          l.special
+                            ? "font-semibold text-primary"
+                            : "text-ink-2"
+                        }`}
+                      >
+                        {l.ref}
+                      </a>
                     </p>
                   </div>
                 </div>
@@ -265,7 +281,7 @@ export default function Dashboard() {
               <p className="mt-1.5 font-serif font-bold">{thisWeek.ref}</p>
               <p className="text-sm text-ink-2">{thisWeek.dates}</p>
               <a
-                href="https://www.churchofjesuschrist.org/study/manual/come-follow-me-for-home-and-church-old-testament-2026?lang=eng"
+                href={lessonUrl(thisWeek.week)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-1.5 inline-block text-xs font-semibold text-primary hover:underline"

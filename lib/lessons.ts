@@ -64,6 +64,11 @@ export const LESSONS: Lesson[] = [
   { week: 52, dates: "December 21–27", sunday: "2026-12-27", ref: "Christmas", special: true },
 ];
 
+// Each week's lesson in the online manual (weeks map 1:1 to lesson numbers)
+export function lessonUrl(week: number): string {
+  return `https://www.churchofjesuschrist.org/study/manual/come-follow-me-for-home-and-church-old-testament-2026/${String(week).padStart(2, "0")}?lang=eng`;
+}
+
 export function parseISODate(iso: string): Date {
   const [y, m, d] = iso.split("-").map(Number);
   return new Date(y, m - 1, d);
