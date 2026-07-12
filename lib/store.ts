@@ -148,13 +148,68 @@ const SCHEMA_VERSION = 5;
 
 const KEY = "sunday-school-v1";
 
+// Willow Haven Ward Sunday School roster from the LCR Organizations and
+// Callings print (11 Jul 2026). Used as the on-device default until the
+// presidency edits or replaces it. Vacancies are omitted; unassigned
+// teachers are marked substitute.
+const WARD_TEACHERS: Teacher[] = [
+  { id: "t1", name: "Brooks Clements" },
+  { id: "t2", name: "Sterling Fillmore" },
+  { id: "t3", name: "Brianne Larsen" },
+  { id: "t4", name: "Jennifer McAllister" },
+  { id: "t5", name: "Ryan Marsh" },
+  { id: "t6", name: "Stacey Marsh" },
+  { id: "t7", name: "Stephanie Marchello" },
+  { id: "t8", name: "Kristen Mendenhall" },
+  { id: "t9", name: "Brady Farr" },
+  { id: "t10", name: "Tyler Turner" },
+  { id: "t11", name: "Kyle Mercer", substitute: true },
+  { id: "t12", name: "Neal Pearson", substitute: true },
+];
+
+const WARD_CLASSES: SSClass[] = [
+  {
+    id: "c1",
+    name: "Adult Sunday School",
+    room: "Gym",
+    teacherIds: ["t1", "t2", "t3"],
+  },
+  { id: "c2", name: "Seniors Class", room: "Bishops Office", teacherIds: [] },
+  { id: "c3", name: "Course 16", room: "107", teacherIds: ["t4"] },
+  {
+    id: "c4",
+    name: "Course 15",
+    room: "Relief Society",
+    teacherIds: ["t5", "t6"],
+  },
+  {
+    id: "c5",
+    name: "Course 13, Course 14",
+    room: "104",
+    teacherIds: ["t7", "t8"],
+  },
+  {
+    id: "c6",
+    name: "Course 11, Course 12",
+    room: "110",
+    teacherIds: ["t9", "t10"],
+  },
+];
+
+const WARD_PRESIDENCY: PresidencyMember[] = [
+  { role: "President", name: "Jaxon Munns" },
+  { role: "First Counselor", name: "Mark Ellis" },
+  { role: "Second Counselor", name: "Trevor Colborn" },
+  { role: "Secretary", name: "" },
+];
+
 const DEFAULT_DATA: AppData = {
-  teachers: [],
-  classes: [],
+  teachers: WARD_TEACHERS,
+  classes: WARD_CLASSES,
   overrides: [],
   weekNotes: {},
   settings: { meetWeeks: "first-third" },
-  presidency: PRESIDENCY_ROLES.map((role) => ({ role, name: "" })),
+  presidency: WARD_PRESIDENCY,
   checklistItems: DEFAULT_CHECKLIST,
   checklist: {},
   attendance: {},
@@ -211,15 +266,31 @@ export function migrate(raw: unknown): AppData {
     );
   }
 
+  // Empty roster (fresh install or never populated) → seed the ward's LCR
+  // print so the presidency isn't staring at blank classes on day one.
+  const teachers =
+    Array.isArray(d.teachers) && d.teachers.length > 0
+      ? d.teachers
+      : WARD_TEACHERS;
+  const classes =
+    Array.isArray(d.classes) && d.classes.length > 0
+      ? d.classes
+      : WARD_CLASSES;
+  const presidency =
+    Array.isArray(d.presidency) &&
+    d.presidency.length === 4 &&
+    d.presidency.some((m) => m.name.trim())
+      ? d.presidency
+      : WARD_PRESIDENCY;
+
   return {
     ...DEFAULT_DATA,
     ...d,
     schemaVersion: SCHEMA_VERSION,
     settings: { ...DEFAULT_DATA.settings, ...(d.settings ?? {}) },
-    presidency:
-      Array.isArray(d.presidency) && d.presidency.length === 4
-        ? d.presidency
-        : DEFAULT_DATA.presidency,
+    presidency,
+    teachers,
+    classes,
     checklistItems,
     checklist: d.checklist ?? {},
     weekNotes: d.weekNotes ?? {},
