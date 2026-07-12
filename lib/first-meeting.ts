@@ -1,14 +1,55 @@
 // First presidency meeting — Willow Haven Ward, July 2026.
 // Used by the meeting slideshow and seeded into the app agenda.
 
+export type SlideArt = {
+  /** Filename under /public/art/meeting/ */
+  file: string;
+  title: string;
+  artist: string;
+};
+
 export type Slide =
-  | { kind: "title"; kicker?: string; title: string; subtitle?: string }
-  | { kind: "item"; kicker?: string; title: string; body?: string[]; who?: string }
-  | { kind: "quote"; attribution: string; text: string }
-  | { kind: "goals"; title: string; goals: { n: string; text: string }[] }
-  | { kind: "plan"; title: string; who: string; points: string[] }
-  | { kind: "emphasis"; lines: string[] }
-  | { kind: "close"; title: string; subtitle?: string };
+  | {
+      kind: "title";
+      kicker?: string;
+      title: string;
+      subtitle?: string;
+      art?: SlideArt;
+    }
+  | {
+      kind: "item";
+      kicker?: string;
+      title: string;
+      body?: string[];
+      who?: string;
+      art?: SlideArt;
+    }
+  | {
+      kind: "quote";
+      attribution: string;
+      text: string;
+      art?: SlideArt;
+    }
+  | {
+      kind: "goals";
+      title: string;
+      goals: { n: string; text: string }[];
+      art?: SlideArt;
+    }
+  | {
+      kind: "plan";
+      title: string;
+      who: string;
+      points: string[];
+      art?: SlideArt;
+    }
+  | { kind: "emphasis"; lines: string[]; art?: SlideArt }
+  | {
+      kind: "close";
+      title: string;
+      subtitle?: string;
+      art?: SlideArt;
+    };
 
 export const MEETING_DATE = "2026-07-12";
 export const MEETING_DATE_LABEL = "Sunday, July 12, 2026";
@@ -84,18 +125,63 @@ export const MEETING_ACTIONS: {
   },
 ];
 
+const ART = {
+  sermon: {
+    file: "christ-sermon.jpg",
+    title: "Sermon on the Mount",
+    artist: "Carl Bloch",
+  },
+  gethsemane: {
+    file: "christ-gethsemane.jpg",
+    title: "Christ in Gethsemane",
+    artist: "Carl Bloch",
+  },
+  youngRuler: {
+    file: "christ-young-ruler.jpg",
+    title: "Christ and the Rich Young Ruler",
+    artist: "Heinrich Hofmann",
+  },
+  healing: {
+    file: "christ-healing.jpg",
+    title: "Christ Healing the Sick",
+    artist: "Carl Bloch",
+  },
+  children: {
+    file: "christ-children.jpg",
+    title: "Suffer the Children",
+    artist: "Carl Bloch",
+  },
+  resurrection: {
+    file: "christ-resurrection.jpg",
+    title: "The Resurrection",
+    artist: "Carl Bloch",
+  },
+  bibleLesson: {
+    file: "bible-lesson.jpg",
+    title: "The Bible Lesson",
+    artist: "Philippe Mercier",
+  },
+  familyBible: {
+    file: "family-bible.jpg",
+    title: "Reading the Bible",
+    artist: "Marie-Guillemine Benoist",
+  },
+} as const satisfies Record<string, SlideArt>;
+
 export const SLIDES: Slide[] = [
   {
     kind: "title",
     kicker: "Willow Haven Ward · Sunday School",
     title: "Presidency Meeting",
     subtitle: MEETING_DATE_LABEL,
+    art: ART.sermon,
   },
   {
     kind: "item",
     kicker: "We begin",
     title: "Opening prayer",
     who: "Trevor",
+    art: ART.gethsemane,
   },
   {
     kind: "item",
@@ -105,6 +191,7 @@ export const SLIDES: Slide[] = [
     body: [
       "We have been trusted with the learning and teaching of the gospel in this ward — at church and at home.",
     ],
+    art: ART.youngRuler,
   },
   {
     kind: "item",
@@ -112,13 +199,15 @@ export const SLIDES: Slide[] = [
     title: "Teaching in the Church and in the home",
     body: [
       "Sunday School exists to help members improve how they learn and teach the gospel — not merely to fill a classroom hour.",
-      "What we do on Sunday should light a fire that burns at home.",
+      "What we do on Sunday should strengthen gospel teaching at home.",
     ],
+    art: ART.bibleLesson,
   },
   {
     kind: "quote",
     attribution: "President Rich",
     text: "Add President Rich’s quote here before the meeting.",
+    art: ART.healing,
   },
   {
     kind: "goals",
@@ -133,6 +222,7 @@ export const SLIDES: Slide[] = [
         text: "Transform how the gospel is taught in the homes of this ward.",
       },
     ],
+    art: ART.children,
   },
   {
     kind: "item",
@@ -141,6 +231,7 @@ export const SLIDES: Slide[] = [
     body: [
       "Small, steady habits that put teachers first and praise first.",
     ],
+    art: ART.sermon,
   },
   {
     kind: "plan",
@@ -151,6 +242,7 @@ export const SLIDES: Slide[] = [
       "Sit as a learner — notice what lifts the room",
       "Leave with something specific and true to praise",
     ],
+    art: ART.youngRuler,
   },
   {
     kind: "plan",
@@ -160,10 +252,12 @@ export const SLIDES: Slide[] = [
       "A private message to the teacher — sincere praise only. How the lesson helped you.",
       "A message to the Sunday School GroupMe — the same spirit of gratitude, shared with the team.",
     ],
+    art: ART.healing,
   },
   {
     kind: "emphasis",
     lines: ["Praise.", "Praise.", "Praise.", "Uplift.", "Uplift.", "Uplift."],
+    art: ART.children,
   },
   {
     kind: "plan",
@@ -174,6 +268,7 @@ export const SLIDES: Slide[] = [
       "Point them into Come, Follow Me — never replace it",
       "One clear idea they can carry into the week and into class",
     ],
+    art: ART.familyBible,
   },
   {
     kind: "plan",
@@ -184,10 +279,12 @@ export const SLIDES: Slide[] = [
       "Checklist, visits, who taught, and assignments — in one place",
       "Built for the hallway, not a desk",
     ],
+    art: ART.bibleLesson,
   },
   {
     kind: "close",
     title: "Let’s go to work",
     subtitle: "For the teachers. For the homes. For Him.",
+    art: ART.resurrection,
   },
 ];
