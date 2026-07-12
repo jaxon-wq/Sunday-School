@@ -130,7 +130,7 @@ export const SLIDES: Slide[] = [
       },
       {
         n: "02",
-        text: "Strengthen how the gospel is taught in the home — home-centered, church-supported.",
+        text: "Transform how the gospel is taught in the home — until every household carries the fire, not just the classroom spark.",
       },
     ],
   },
