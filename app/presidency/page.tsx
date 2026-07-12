@@ -84,6 +84,7 @@ export default function PresidencyPage() {
   const [visitBy, setVisitBy] = useState<PresidencyRole>("First Counselor");
   const [visitNote, setVisitNote] = useState("");
   const [packetCopied, setPacketCopied] = useState(false);
+  const [newAgenda, setNewAgenda] = useState("");
   if (!data) return null;
 
   const packet = buildMeetingPacket(data);
@@ -272,9 +273,83 @@ export default function PresidencyPage() {
           </div>
         </div>
         <p className="mb-3 text-sm text-ink-2">
-          Standing agenda filled from what the app already knows — notes and
-          assignments that don&apos;t get lost between meetings.
+          Edit the standing agenda below — it shows in every upcoming meeting.
+          Notes and assignments stay with each meeting.
         </p>
+
+        {/* Editable standing agenda */}
+        <div className="mb-4 overflow-hidden rounded-lg border border-line bg-white print:hidden">
+          <div className="border-b border-line bg-surface px-4 py-2">
+            <p className="text-xs font-bold uppercase tracking-wider text-ink-3">
+              Standing agenda
+            </p>
+          </div>
+          {data.meetingAgenda.map((item, i) => (
+            <div
+              key={item.id}
+              className={`flex items-center gap-2 px-3 py-2 ${
+                i > 0 ? "border-t border-line" : ""
+              }`}
+            >
+              <span className="w-5 shrink-0 text-center text-xs font-semibold text-ink-3">
+                {i + 1}
+              </span>
+              <input
+                value={item.text}
+                onChange={(e) => {
+                  const text = e.target.value;
+                  update((d) => ({
+                    ...d,
+                    meetingAgenda: d.meetingAgenda.map((a) =>
+                      a.id === item.id ? { ...a, text } : a
+                    ),
+                  }));
+                }}
+                className="min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-2 py-1.5 text-sm hover:border-line focus:border-line focus:bg-white"
+              />
+              <button
+                type="button"
+                onClick={() =>
+                  update((d) => ({
+                    ...d,
+                    meetingAgenda: d.meetingAgenda.filter((a) => a.id !== item.id),
+                  }))
+                }
+                className="shrink-0 text-xs text-ink-3 hover:text-danger"
+                aria-label={`Remove agenda item`}
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const text = newAgenda.trim();
+              if (!text) return;
+              update((d) => ({
+                ...d,
+                meetingAgenda: [...d.meetingAgenda, { id: uid(), text }],
+              }));
+              setNewAgenda("");
+            }}
+            className="flex flex-wrap items-center gap-2 border-t border-line bg-surface px-3 py-2"
+          >
+            <input
+              value={newAgenda}
+              onChange={(e) => setNewAgenda(e.target.value)}
+              placeholder="Add an agenda item…"
+              className="min-w-0 flex-1 rounded-md border border-line bg-white px-3 py-1.5 text-sm placeholder:text-ink-3"
+            />
+            <button
+              type="submit"
+              className="rounded-md bg-primary px-4 py-1.5 text-sm font-semibold text-white hover:bg-primary-dark"
+            >
+              Add
+            </button>
+          </form>
+        </div>
+
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -355,32 +430,53 @@ export default function PresidencyPage() {
                     </button>
                   </div>
                   {upcoming && (
-                    <div className="mt-4 space-y-4">
+                    <div className="mt-4 space-y-3">
                       <p className="text-xs font-bold uppercase tracking-wider text-ink-3">
-                        Live agenda · {packet.generated}
+                        Agenda
                       </p>
-                      {packet.sections.map((s) => (
-                        <div key={s.title}>
-                          <p className="text-sm font-semibold text-ink">
-                            {s.title}
-                          </p>
-                          {s.bullets.length === 0 ? (
-                            <p className="mt-1 text-sm text-ink-3">{s.empty}</p>
-                          ) : (
-                            <ul className="mt-1.5 space-y-1">
-                              {s.bullets.map((b) => (
-                                <li
-                                  key={b}
-                                  className="flex gap-2 text-sm text-ink-2"
-                                >
-                                  <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary" />
-                                  {b}
-                                </li>
-                              ))}
-                            </ul>
-                          )}
+                      <ol className="list-decimal space-y-1.5 pl-5">
+                        {data.meetingAgenda.map((item) => (
+                          <li key={item.id} className="text-sm text-ink">
+                            {item.text}
+                          </li>
+                        ))}
+                      </ol>
+                      {data.meetingAgenda.length === 0 && (
+                        <p className="text-sm text-ink-3">
+                          Add items to the standing agenda above.
+                        </p>
+                      )}
+                      <details className="rounded-md border border-line bg-surface px-3 py-2 print:hidden">
+                        <summary className="cursor-pointer text-xs font-bold uppercase tracking-wider text-ink-3">
+                          App briefing · {packet.generated}
+                        </summary>
+                        <div className="mt-3 space-y-3">
+                          {packet.sections.map((s) => (
+                            <div key={s.title}>
+                              <p className="text-sm font-semibold text-ink">
+                                {s.title}
+                              </p>
+                              {s.bullets.length === 0 ? (
+                                <p className="mt-1 text-sm text-ink-3">
+                                  {s.empty}
+                                </p>
+                              ) : (
+                                <ul className="mt-1.5 space-y-1">
+                                  {s.bullets.map((b) => (
+                                    <li
+                                      key={b}
+                                      className="flex gap-2 text-sm text-ink-2"
+                                    >
+                                      <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary" />
+                                      {b}
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                      </details>
                     </div>
                   )}
                   <textarea
