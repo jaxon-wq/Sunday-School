@@ -5,6 +5,7 @@ import Link from "next/link";
 import LessonArt, { artworkFor } from "@/components/LessonArt";
 import { kitFor, kitMessage } from "@/lib/kits";
 import { LESSONS, formatSunday, lessonUrl, occurrenceLabel, parseISODate } from "@/lib/lessons";
+import { MEETING_DATE_LABEL, PRESIDENCY_AIMS } from "@/lib/first-meeting";
 import {
   CARE_THRESHOLD,
   NEW_SCHEDULE_START,
@@ -13,6 +14,7 @@ import {
   offerBreakMessage,
   smsHref,
   teacherLoads,
+  todayISO,
   todayStart,
   uid,
   useAppData,
@@ -63,12 +65,16 @@ export default function Dashboard() {
   const careAlert = teacherLoads(data).find(
     (l) => l.streak + (l.scheduledNext ? 1 : 0) >= CARE_THRESHOLD
   );
+  const todayStr = todayISO();
   const tomorrow = (() => {
     const d = new Date();
     d.setDate(d.getDate() + 1);
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   })();
-  const tomorrowMeeting = data.meetings.find((m) => m.date === tomorrow);
+  const todayMeeting = data.meetings.find((m) => m.date === todayStr);
+  const tomorrowMeeting = !todayMeeting
+    ? data.meetings.find((m) => m.date === tomorrow)
+    : undefined;
 
   // Sunday-evening kit targets the teaching Sunday strictly AFTER today,
   // so on Sunday night it points at next week, not this morning.
@@ -154,14 +160,64 @@ export default function Dashboard() {
         </div>
       )}
 
+      {todayMeeting && (
+        <section className="overflow-hidden rounded-lg border border-primary/30 bg-white">
+          <div className="bg-primary-soft px-5 py-4 sm:px-8 sm:py-5">
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-dark">
+              Presidency meeting · today
+            </p>
+            <h2 className="mt-1 font-serif text-2xl font-bold tracking-tight sm:text-3xl">
+              {MEETING_DATE_LABEL}
+            </h2>
+            <p className="mt-1.5 text-sm text-ink-2">
+              Slideshow, live agenda, notes, and assignments — ready for the
+              room.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Link
+                href="/meeting"
+                className="rounded-md bg-primary px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-dark"
+              >
+                Open slideshow
+              </Link>
+              <Link
+                href="/presidency"
+                className="rounded-md border border-line-2 bg-white px-5 py-2 text-sm font-semibold text-ink transition-colors hover:bg-surface"
+              >
+                Live agenda
+              </Link>
+            </div>
+          </div>
+          <div className="px-5 py-4 sm:px-8">
+            <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-ink-3">
+              Two aims
+            </p>
+            <ol className="mt-2 space-y-2 text-sm text-ink">
+              {PRESIDENCY_AIMS.map((aim) => (
+                <li key={aim.n} className="flex gap-3">
+                  <span className="font-serif font-bold text-primary">
+                    {aim.n}
+                  </span>
+                  <span>{aim.text}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+      )}
+
       {tomorrowMeeting && (
         <div className="rounded-lg border border-primary/30 bg-primary-soft px-4 py-3 text-sm text-ink">
           <span className="font-semibold text-primary-dark">
             Presidency meeting tomorrow.
           </span>{" "}
-          Open the live agenda, notes, and assignments —{" "}
+          Open the slideshow or the live agenda —{" "}
+          <Link href="/meeting" className="font-semibold text-primary underline">
+            slideshow
+          </Link>
+          {" · "}
           <Link href="/presidency" className="font-semibold text-primary underline">
-            go to Presidency
+            Presidency
           </Link>
           .
         </div>

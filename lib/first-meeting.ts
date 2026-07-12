@@ -95,6 +95,17 @@ Plans:
 • Jaxon — prepare weekly thoughts to send teachers Sunday evening
 • Onboard the whole presidency to the app`;
 
+export const PRESIDENCY_AIMS = [
+  {
+    n: "01",
+    text: "Make Sunday School the hour members look forward to — warm, Christ-centered, and alive.",
+  },
+  {
+    n: "02",
+    text: "Transform how the gospel is taught in the homes of this ward.",
+  },
+] as const;
+
 export const MEETING_ACTIONS: {
   text: string;
   assignedTo: "President" | "First Counselor" | "Second Counselor" | "Everyone";
@@ -212,16 +223,7 @@ export const SLIDES: Slide[] = [
   {
     kind: "goals",
     title: "What we’re aiming for",
-    goals: [
-      {
-        n: "01",
-        text: "Make Sunday School the hour members look forward to — warm, Christ-centered, and alive.",
-      },
-      {
-        n: "02",
-        text: "Transform how the gospel is taught in the homes of this ward.",
-      },
-    ],
+    goals: [...PRESIDENCY_AIMS],
     art: ART.children,
   },
   {
