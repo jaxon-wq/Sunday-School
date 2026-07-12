@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import SyncStatusChip from "@/components/SyncStatusChip";
+import { isConfigured, isSyncAvailable } from "@/lib/sync";
+import { useAppData } from "@/lib/store";
 
 const LINKS: { href: string; label: string; icon: React.ReactNode }[] = [
   {
@@ -55,15 +58,20 @@ const LINKS: { href: string; label: string; icon: React.ReactNode }[] = [
 
 export default function Nav() {
   const pathname = usePathname();
+  const { syncStatus } = useAppData();
+  const showSync = isSyncAvailable() && isConfigured();
   return (
     <>
       {/* Slim top brand bar */}
       <header className="border-b border-line bg-white print:hidden">
-        <div className="mx-auto flex max-w-5xl items-baseline gap-2.5 px-4 py-3">
-          <Link href="/" className="font-serif text-lg font-bold tracking-tight text-ink">
-            Sunday School
-          </Link>
-          <span className="text-xs text-ink-3">Old Testament · 2026</span>
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-2.5 px-4 py-3">
+          <div className="flex items-baseline gap-2.5">
+            <Link href="/" className="font-serif text-lg font-bold tracking-tight text-ink">
+              Sunday School
+            </Link>
+            <span className="text-xs text-ink-3">Old Testament · 2026</span>
+          </div>
+          {showSync && <SyncStatusChip status={syncStatus} />}
         </div>
       </header>
 

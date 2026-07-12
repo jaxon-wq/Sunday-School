@@ -25,6 +25,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+        env:
+          # Encrypted sync bucket (ciphertext only; presidency code is the key)
+          NEXT_PUBLIC_MANTLE_NS: ss-3110c6ff
+          NEXT_PUBLIC_MANTLE_KEY: 1212399d7a020b7bc15c7c5e46a1fcc239af4bf9d95e0bb61365fc7ffab02ba3
       - uses: actions/configure-pages@v5
         with:
           enablement: true

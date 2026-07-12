@@ -14,6 +14,11 @@ const nextConfig: NextConfig = {
     // Plain <img>/<a> URLs don't get basePath automatically — components
     // that reference /public assets prefix with this.
     NEXT_PUBLIC_BASE_PATH: basePath,
+    NEXT_PUBLIC_MANTLE_NS:
+      process.env.NEXT_PUBLIC_MANTLE_NS ?? "ss-3110c6ff",
+    NEXT_PUBLIC_MANTLE_KEY:
+      process.env.NEXT_PUBLIC_MANTLE_KEY ??
+      "1212399d7a020b7bc15c7c5e46a1fcc239af4bf9d95e0bb61365fc7ffab02ba3",
   },
 };
 

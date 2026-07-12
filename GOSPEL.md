@@ -71,9 +71,11 @@ It is built for three recurring moments:
 
 ## Current decisions of record
 
-- **Sharing**: presidency of four. Until real sync exists, data moves by
-  share/export/import (one-tap Web Share for AirDrop/Messages); a synced backend
-  is the next architectural frontier, adopted only when the manual dance hurts.
+- **Sharing** (updated July 2026): presidency of four. Sync is live via an
+  encrypted cloud copy keyed by a shared presidency code — each device encrypts
+  before upload; the server only stores ciphertext. Still offline-first
+  (localStorage is source of truth; sync is best-effort when online).
+  Export/import remains for one-off moves. No user accounts.
 - **Teachers stay outside the app**: sub requests and reminders go out as prefilled
   text messages from the presidency's phones.
 - **Real data**: to be populated from LCR when access arrives (paste-in importer is
@@ -85,9 +87,8 @@ It is built for three recurring moments:
 - **Passcode, not logins** (decided July 2026): the public site holds no ward data —
   each device holds its own copy, so protection lives at the device: an optional
   per-device passcode encrypts everything at rest (AES-GCM; forgotten passcode =
-  unrecoverable, by design). Real user accounts arrive together with sync, not
-  before — a login on a static site would be security theater, and we don't do
-  theater.
+  unrecoverable, by design). Presidency sync uses a separate shared code for
+  the cloud copy — not user accounts, and not security theater.
 
 ## The test
 

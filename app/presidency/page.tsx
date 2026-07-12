@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import PresidencySync from "@/components/PresidencySync";
 import { LESSONS, formatSunday, parseISODate } from "@/lib/lessons";
 import {
   buildMeetingPacket,
@@ -69,7 +70,7 @@ const RESPONSIBILITIES: { role: string; duties: string[] }[] = [
 ];
 
 export default function PresidencyPage() {
-  const { data, update } = useAppData();
+  const { data, update, syncStatus } = useAppData();
   const [newItem, setNewItem] = useState("");
   const [newOwner, setNewOwner] = useState<PresidencyRole | "Everyone">(
     "President"
@@ -246,6 +247,8 @@ export default function PresidencyPage() {
           ))}
         </div>
       </section>
+
+      <PresidencySync data={data} syncStatus={syncStatus} />
 
       {/* Presidency meetings */}
       <section>
