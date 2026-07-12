@@ -69,6 +69,7 @@ export const DEFAULT_CHECKLIST: ChecklistItem[] = [
   { id: "greet-teachers", label: "Sunday, 10 min before church — greet each teacher before class", assignedTo: "President" },
   { id: "visit-class", label: "During class: visit one class (rotate weekly) and note what went well", assignedTo: "First Counselor" },
   { id: "official-roll", label: "After class: attendance marked in Member Tools (the official roll) — confirm each teacher recorded their class", assignedTo: "Secretary" },
+  { id: "mark-taught", label: "After class: on the Schedule, check off who taught each class", assignedTo: "First Counselor" },
   { id: "council-notes", label: "After class: note follow-ups and anything for ward council", assignedTo: "Secretary" },
   { id: "thank-teacher", label: "Sunday evening: thank one teacher by text", assignedTo: "President" },
   { id: "send-kit", label: "Sunday evening: send teachers next week's kit (lesson link, one extra, one question)", assignedTo: "President" },
@@ -140,11 +141,13 @@ export type AppData = {
   checklist: Record<string, Record<string, boolean>>;
   // headcounts only, never names: sunday ISO -> classId -> count
   attendance: Record<string, Record<string, number>>;
+  // who actually taught: sunday ISO -> classId -> teacherId (counselor check-off)
+  taught: Record<string, Record<string, string>>;
   councils: Council[];
   candidates: Candidate[];
 };
 
-const SCHEMA_VERSION = 5;
+const SCHEMA_VERSION = 6;
 
 const KEY = "sunday-school-v1";
 
@@ -213,6 +216,7 @@ const DEFAULT_DATA: AppData = {
   checklistItems: DEFAULT_CHECKLIST,
   checklist: {},
   attendance: {},
+  taught: {},
   councils: [],
   candidates: [],
   meetings: [],
@@ -266,6 +270,16 @@ export function migrate(raw: unknown): AppData {
     );
   }
 
+  // v6: counselor check-off of who taught — replaces inferred streaks.
+  if ((d.schemaVersion ?? 1) < 6) {
+    if (!checklistItems.some((i) => i.id === "mark-taught")) {
+      const item = DEFAULT_CHECKLIST.find((i) => i.id === "mark-taught")!;
+      const at = checklistItems.findIndex((i) => i.id === "council-notes");
+      checklistItems = [...checklistItems];
+      checklistItems.splice(at === -1 ? checklistItems.length : at, 0, item);
+    }
+  }
+
   // Empty roster (fresh install or never populated) → seed the ward's LCR
   // print so the presidency isn't staring at blank classes on day one.
   const teachers =
@@ -295,6 +309,7 @@ export function migrate(raw: unknown): AppData {
     checklist: d.checklist ?? {},
     weekNotes: d.weekNotes ?? {},
     attendance: d.attendance ?? {},
+    taught: d.taught ?? {},
     councils: Array.isArray(d.councils) ? d.councils : [],
     candidates: Array.isArray(d.candidates) ? d.candidates : [],
     meetings: Array.isArray(d.meetings) ? d.meetings : [],
@@ -536,25 +551,31 @@ export function subRequestMessage(opts: {
 }
 
 // ---- Teacher care (GOSPEL.md principle 6: names, not numbers) ----
-// A count of consecutive teaching Sundays exists so a person gets noticed
-// and offered a break — never as a scoreboard.
+// Streaks come only from counselor check-offs of who actually taught —
+// never inferred backward from class assignments.
 
 export type TeacherLoad = {
   teacher: Teacher;
-  // consecutive completed teaching Sundays taught, ending at the most recent
+  // consecutive logged teaching Sundays this teacher taught, ending at the
+  // most recent logged Sunday
   streak: number;
-  // assigned (or subbing) on the next teaching Sunday too
+  // assigned (or subbing) on the next teaching Sunday
   scheduledNext: boolean;
   taughtOfLast8: number;
   nextSunday?: string;
 };
 
-function taughtOn(data: AppData, sunday: string, teacherId: string): boolean {
-  return data.classes.some((c) => {
-    const ov = findOverride(data, sunday, c.id);
-    if (ov?.teacherId) return ov.teacherId === teacherId;
-    return c.teacherIds.includes(teacherId);
-  });
+/** True if a counselor recorded this teacher as having taught that Sunday. */
+export function taughtOn(data: AppData, sunday: string, teacherId: string): boolean {
+  const day = data.taught[sunday];
+  if (!day) return false;
+  return Object.values(day).includes(teacherId);
+}
+
+/** True if any class on this Sunday has a who-taught check-off. */
+export function sundayIsLogged(data: AppData, sunday: string): boolean {
+  const day = data.taught[sunday];
+  return Boolean(day && Object.keys(day).length > 0);
 }
 
 export function teacherLoads(data: AppData): TeacherLoad[] {
@@ -564,19 +585,29 @@ export function teacherLoads(data: AppData): TeacherLoad[] {
   );
   const today = todayStart();
   const past = sundays.filter((s) => parseISODate(s) < today);
+  // Only Sundays counselors have logged — unlogged history doesn't invent
+  // or break a streak.
+  const loggedPast = past.filter((s) => sundayIsLogged(data, s));
   const next = sundays.find((s) => parseISODate(s) >= today);
 
   return data.teachers
     .map((teacher) => {
       let streak = 0;
-      for (let i = past.length - 1; i >= 0; i--) {
-        if (taughtOn(data, past[i], teacher.id)) streak++;
+      for (let i = loggedPast.length - 1; i >= 0; i--) {
+        if (taughtOn(data, loggedPast[i], teacher.id)) streak++;
         else break;
       }
-      const taughtOfLast8 = past
+      const taughtOfLast8 = loggedPast
         .slice(-8)
         .filter((s) => taughtOn(data, s, teacher.id)).length;
-      const scheduledNext = next ? taughtOn(data, next, teacher.id) : false;
+      // Upcoming assignment is still from the roster (forward-looking only).
+      const scheduledNext = next
+        ? data.classes.some((c) => {
+            const ov = findOverride(data, next, c.id);
+            if (ov?.teacherId) return ov.teacherId === teacher.id;
+            return c.teacherIds.includes(teacher.id);
+          })
+        : false;
       return { teacher, streak, scheduledNext, taughtOfLast8, nextSunday: next };
     })
     .sort(
