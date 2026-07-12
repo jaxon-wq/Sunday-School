@@ -147,7 +147,7 @@ export type AppData = {
   candidates: Candidate[];
 };
 
-const SCHEMA_VERSION = 6;
+const SCHEMA_VERSION = 7;
 
 const KEY = "sunday-school-v1";
 
@@ -168,6 +168,8 @@ const WARD_TEACHERS: Teacher[] = [
   { id: "t10", name: "Tyler Turner" },
   { id: "t11", name: "Kyle Mercer", substitute: true },
   { id: "t12", name: "Neal Pearson", substitute: true },
+  { id: "t13", name: "Brother Maeser" },
+  { id: "t14", name: "Sister Maeser" },
 ];
 
 const WARD_CLASSES: SSClass[] = [
@@ -177,7 +179,12 @@ const WARD_CLASSES: SSClass[] = [
     room: "Gym",
     teacherIds: ["t1", "t2", "t3"],
   },
-  { id: "c2", name: "Seniors Class", room: "Bishops Office", teacherIds: [] },
+  {
+    id: "c2",
+    name: "Seniors Class",
+    room: "Bishops Office",
+    teacherIds: ["t13", "t14"],
+  },
   { id: "c3", name: "Course 16", room: "107", teacherIds: ["t4"] },
   {
     id: "c4",
@@ -282,11 +289,11 @@ export function migrate(raw: unknown): AppData {
 
   // Empty roster (fresh install or never populated) → seed the ward's LCR
   // print so the presidency isn't staring at blank classes on day one.
-  const teachers =
+  let teachers =
     Array.isArray(d.teachers) && d.teachers.length > 0
       ? d.teachers
       : WARD_TEACHERS;
-  const classes =
+  let classes =
     Array.isArray(d.classes) && d.classes.length > 0
       ? d.classes
       : WARD_CLASSES;
@@ -296,6 +303,29 @@ export function migrate(raw: unknown): AppData {
     d.presidency.some((m) => m.name.trim())
       ? d.presidency
       : WARD_PRESIDENCY;
+
+  // v7: Seniors Class teachers are the Maesers (LCR had the callings vacant).
+  if ((d.schemaVersion ?? 1) < 7) {
+    const maesers = WARD_TEACHERS.filter(
+      (t) => t.id === "t13" || t.id === "t14"
+    );
+    for (const m of maesers) {
+      if (!teachers.some((t) => t.id === m.id || /maeser/i.test(t.name))) {
+        teachers = [...teachers, m];
+      }
+    }
+    classes = classes.map((c) => {
+      if (c.id !== "c2" && !/^seniors/i.test(c.name)) return c;
+      if (c.teacherIds.length > 0) return c;
+      const ids = maesers
+        .map(
+          (m) =>
+            teachers.find((t) => t.id === m.id || /maeser/i.test(t.name))?.id
+        )
+        .filter((id): id is string => Boolean(id));
+      return { ...c, teacherIds: ids };
+    });
+  }
 
   return {
     ...DEFAULT_DATA,
