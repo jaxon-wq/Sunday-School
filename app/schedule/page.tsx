@@ -105,8 +105,14 @@ export default function SchedulePage() {
             2026 Schedule
           </h1>
           <p className="mt-1 text-sm text-ink-2">
-            Come, Follow Me — Old Testament. Assign substitutes, check off who
-            taught, send texts, and add notes.{" "}
+            Come, Follow Me — Old Testament. Before September 6,{" "}
+            <span className="font-semibold text-ink">Sunday School</span> weeks
+            alternate with{" "}
+            <span className="font-semibold text-ink">
+              Priesthood / Relief Society
+            </span>{" "}
+            — badges on each row make the distinction clear. Assign substitutes,
+            check off who taught, send texts, and add notes on teaching Sundays.{" "}
             <Link href="/month" className="font-semibold text-primary hover:underline">
               Month view →
             </Link>
@@ -245,7 +251,7 @@ export default function SchedulePage() {
                             ? lesson.sunday >= NEW_SCHEDULE_START
                               ? "Sunday School · 25 min"
                               : `Sunday School · ${occurrenceLabel(lesson.sunday)}`
-                            : occurrenceLabel(lesson.sunday)}
+                            : `Priesthood / Relief Society · ${occurrenceLabel(lesson.sunday)}`}
                         </span>
                       </span>
                     </div>
