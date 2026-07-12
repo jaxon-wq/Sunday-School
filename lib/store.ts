@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   decryptJson,
   deriveKey,
@@ -10,6 +10,11 @@ import {
   unb64,
 } from "./crypto";
 import { LESSONS, parseISODate, sundayOccurrence } from "./lessons";
+import {
+  initSync,
+  schedulePush,
+  type SyncStatus,
+} from "./sync";
 
 export type Teacher = {
   id: string;
@@ -382,6 +387,13 @@ export function useAppData() {
   const [data, setData] = useState<AppData | null>(null);
   const [lockState, setLockState] = useState<LockState>("loading");
   const [lockEnabled, setLockEnabled] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>("not-connected");
+  const applyingRemote = useRef(false);
+  const dataRef = useRef<AppData | null>(null);
+
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
 
   useEffect(() => {
     (async () => {
@@ -418,7 +430,7 @@ export function useAppData() {
     })();
   }, []);
 
-  const persist = useCallback((next: AppData) => {
+  const persist = useCallback((next: AppData, fromRemote = false) => {
     if (sessionKey && sessionSalt) {
       const key = sessionKey;
       const salt = sessionSalt;
@@ -434,7 +446,27 @@ export function useAppData() {
         // storage full or unavailable; keep in-memory state
       }
     }
+    if (!fromRemote && !applyingRemote.current) schedulePush();
   }, []);
+
+  useEffect(() => {
+    if (lockState !== "ready" || !data) return;
+    return initSync({
+      getData: () => dataRef.current,
+      applyRemote: (remote, updatedAt) => {
+        applyingRemote.current = true;
+        const next = migrate(remote);
+        setData(next);
+        persist(next, true);
+        localStorage.setItem("ss-sync-remote-at", updatedAt);
+        localStorage.setItem("ss-sync-local-at", updatedAt);
+        applyingRemote.current = false;
+      },
+      onStatus: setSyncStatus,
+    });
+    // Init once when app becomes ready — dataRef holds current data.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lockState, persist]);
 
   const update = useCallback(
     (fn: (d: AppData) => AppData) => {
@@ -507,6 +539,7 @@ export function useAppData() {
     enableLock,
     disableLock,
     wipe,
+    syncStatus,
   };
 }
 
