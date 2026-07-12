@@ -60,19 +60,16 @@ export type ChecklistItem = {
   assignedTo: PresidencyRole | "Everyone";
 };
 
-// Handbook-informed default Sunday rhythm for the presidency.
+// Handbook-informed default weekly rhythm for the presidency.
 export const DEFAULT_CHECKLIST: ChecklistItem[] = [
-  { id: "confirm-teachers", label: "Thursday: confirm every class has a teacher for Sunday", assignedTo: "President" },
-  { id: "arrange-subs", label: "Friday: arrange substitutes for any gaps", assignedTo: "First Counselor" },
-  { id: "check-in", label: "Saturday: check in with any new or struggling teachers", assignedTo: "Second Counselor" },
-  { id: "rooms-ready", label: "Sunday, 20 min before church — classrooms unlocked, chairs and materials ready", assignedTo: "Second Counselor" },
-  { id: "greet-teachers", label: "Sunday, 10 min before church — greet each teacher before class", assignedTo: "President" },
-  { id: "visit-class", label: "During class: visit one class (rotate weekly) and note what went well", assignedTo: "First Counselor" },
-  { id: "official-roll", label: "After class: attendance marked in Member Tools (the official roll) — confirm each teacher recorded their class", assignedTo: "Secretary" },
+  { id: "arrange-subs", label: "As needed: arrange a substitute when a teacher can't make it", assignedTo: "First Counselor" },
+  { id: "tech-help", label: "As needed: help teachers with tech or materials when they ask", assignedTo: "Second Counselor" },
+  { id: "visit-class", label: "During class: visit one class (rotate) and note what went well", assignedTo: "First Counselor" },
+  { id: "official-roll", label: "After class: confirm attendance was marked in Member Tools", assignedTo: "Secretary" },
   { id: "mark-taught", label: "After class: on the Schedule, check off who taught each class", assignedTo: "First Counselor" },
-  { id: "council-notes", label: "After class: note follow-ups and anything for ward council", assignedTo: "Secretary" },
-  { id: "thank-teacher", label: "Sunday evening: thank one teacher by text", assignedTo: "President" },
-  { id: "send-kit", label: "Sunday evening: send teachers next week's kit (lesson link, one extra, one question)", assignedTo: "President" },
+  { id: "council-notes", label: "After class: note anything for ward council", assignedTo: "Secretary" },
+  { id: "thank-teacher", label: "Sometime this week: thank one teacher by text", assignedTo: "President" },
+  { id: "send-kit", label: "Sunday evening: send teachers next week's kit", assignedTo: "President" },
 ];
 
 // A teacher council meeting (Handbook 13; Teaching in the Savior's Way)
@@ -147,7 +144,7 @@ export type AppData = {
   candidates: Candidate[];
 };
 
-const SCHEMA_VERSION = 7;
+const SCHEMA_VERSION = 8;
 
 const KEY = "sunday-school-v1";
 
@@ -168,8 +165,8 @@ const WARD_TEACHERS: Teacher[] = [
   { id: "t10", name: "Tyler Turner" },
   { id: "t11", name: "Kyle Mercer", substitute: true },
   { id: "t12", name: "Neal Pearson", substitute: true },
-  { id: "t13", name: "Brother Maeser" },
-  { id: "t14", name: "Sister Maeser" },
+  { id: "t13", name: "Stan Maeser" },
+  { id: "t14", name: "Lorah Maeser" },
 ];
 
 const WARD_CLASSES: SSClass[] = [
@@ -210,7 +207,7 @@ const WARD_PRESIDENCY: PresidencyMember[] = [
   { role: "President", name: "Jaxon Munns" },
   { role: "First Counselor", name: "Mark Ellis" },
   { role: "Second Counselor", name: "Trevor Colborn" },
-  { role: "Secretary", name: "" },
+  { role: "Secretary", name: "Marcos Menendez" },
 ];
 
 const DEFAULT_DATA: AppData = {
@@ -270,10 +267,14 @@ export function migrate(raw: unknown): AppData {
       "rooms-ready": "Sunday 8:40 — classrooms unlocked, chairs and materials ready",
       "greet-teachers": "Sunday 8:50 — greet each teacher before class",
     };
+    const v4Labels: Record<string, string> = {
+      "rooms-ready":
+        "Sunday, 20 min before church — classrooms unlocked, chairs and materials ready",
+      "greet-teachers":
+        "Sunday, 10 min before church — greet each teacher before class",
+    };
     checklistItems = checklistItems.map((i) =>
-      oldLabels[i.id] === i.label
-        ? { ...i, label: DEFAULT_CHECKLIST.find((x) => x.id === i.id)!.label }
-        : i
+      oldLabels[i.id] === i.label ? { ...i, label: v4Labels[i.id] } : i
     );
   }
 
@@ -297,7 +298,7 @@ export function migrate(raw: unknown): AppData {
     Array.isArray(d.classes) && d.classes.length > 0
       ? d.classes
       : WARD_CLASSES;
-  const presidency =
+  let presidency =
     Array.isArray(d.presidency) &&
     d.presidency.length === 4 &&
     d.presidency.some((m) => m.name.trim())
@@ -325,6 +326,23 @@ export function migrate(raw: unknown): AppData {
         .filter((id): id is string => Boolean(id));
       return { ...c, teacherIds: ids };
     });
+  }
+
+  // v8: practical weekly checklist, Maeser names, Secretary default.
+  if ((d.schemaVersion ?? 1) < 8) {
+    teachers = teachers.map((t) => {
+      if (t.id === "t13" || /brother\s+maeser/i.test(t.name))
+        return { ...t, name: "Stan Maeser" };
+      if (t.id === "t14" || /sister\s+maeser/i.test(t.name))
+        return { ...t, name: "Lorah Maeser" };
+      return t;
+    });
+    presidency = presidency.map((m) =>
+      m.role === "Secretary" && !m.name.trim()
+        ? { ...m, name: "Marcos Menendez" }
+        : m
+    );
+    checklistItems = [...DEFAULT_CHECKLIST];
   }
 
   return {

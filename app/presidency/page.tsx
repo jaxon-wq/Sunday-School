@@ -9,8 +9,6 @@ import {
   packetText,
   tomorrowISO,
 } from "@/lib/meeting-packet";
-import { getSyncConfig, pullFromCloud, pushToCloud, saveSyncConfig } from "@/lib/sync";
-import { migrate } from "@/lib/store";
 import {
   CARE_THRESHOLD,
   CARE_WATCH,
@@ -71,15 +69,11 @@ const RESPONSIBILITIES: { role: string; duties: string[] }[] = [
 ];
 
 export default function PresidencyPage() {
-  const { data, update, lockEnabled, enableLock, disableLock } = useAppData();
+  const { data, update } = useAppData();
   const [newItem, setNewItem] = useState("");
   const [newOwner, setNewOwner] = useState<PresidencyRole | "Everyone">(
     "President"
   );
-  const [pin1, setPin1] = useState("");
-  const [pin2, setPin2] = useState("");
-  const [pinMsg, setPinMsg] = useState("");
-  const [pinBusy, setPinBusy] = useState(false);
   const [meetingDate, setMeetingDate] = useState(tomorrowISO);
   const [newAction, setNewAction] = useState<Record<string, string>>({});
   const [newActionOwner, setNewActionOwner] = useState<
@@ -88,11 +82,6 @@ export default function PresidencyPage() {
   const [visitClass, setVisitClass] = useState("");
   const [visitBy, setVisitBy] = useState<PresidencyRole>("First Counselor");
   const [visitNote, setVisitNote] = useState("");
-  const [syncToken, setSyncToken] = useState(() => getSyncConfig().token);
-  const [syncGist, setSyncGist] = useState(() => getSyncConfig().gistId);
-  const [syncPass, setSyncPass] = useState("");
-  const [syncMsg, setSyncMsg] = useState("");
-  const [syncBusy, setSyncBusy] = useState(false);
   const [packetCopied, setPacketCopied] = useState(false);
   if (!data) return null;
 
@@ -119,71 +108,6 @@ export default function PresidencyPage() {
     } catch {
       // clipboard unavailable — ignore
     }
-  }
-
-  async function doPush() {
-    if (!data || !syncPass) {
-      setSyncMsg("Enter the presidency passphrase first.");
-      return;
-    }
-    setSyncBusy(true);
-    setSyncMsg("");
-    try {
-      saveSyncConfig(syncToken, syncGist);
-      const r = await pushToCloud(data, syncPass);
-      setSyncGist(r.gistId);
-      setSyncMsg(`Pushed ✓ (${new Date(r.updatedAt).toLocaleTimeString()})`);
-    } catch (e) {
-      setSyncMsg(e instanceof Error ? e.message : "Push failed.");
-    } finally {
-      setSyncBusy(false);
-    }
-  }
-
-  async function doPull() {
-    if (!syncPass) {
-      setSyncMsg("Enter the presidency passphrase first.");
-      return;
-    }
-    setSyncBusy(true);
-    setSyncMsg("");
-    try {
-      saveSyncConfig(syncToken, syncGist);
-      const r = await pullFromCloud(syncPass);
-      const incoming = migrate(r.data);
-      if (
-        window.confirm(
-          `Replace this device's data with the presidency copy from ${new Date(r.updatedAt).toLocaleString()}? (${incoming.teachers.length} teachers, ${incoming.classes.length} classes)`
-        )
-      ) {
-        update(() => incoming);
-        setSyncMsg("Pulled ✓ — this device now matches the presidency copy.");
-      } else {
-        setSyncMsg("Pull cancelled.");
-      }
-    } catch (e) {
-      setSyncMsg(e instanceof Error ? e.message : "Pull failed.");
-    } finally {
-      setSyncBusy(false);
-    }
-  }
-
-  async function savePin(e: React.FormEvent) {
-    e.preventDefault();
-    if (pin1.length < 4) {
-      setPinMsg("Use at least 4 characters.");
-      return;
-    }
-    if (pin1 !== pin2) {
-      setPinMsg("Those don't match.");
-      return;
-    }
-    setPinBusy(true);
-    await enableLock(pin1);
-    setPinBusy(false);
-    setPin1("");
-    setPin2("");
-    setPinMsg(lockEnabled ? "Passcode changed." : "Passcode on — data on this device is now encrypted.");
   }
 
   const today = todayStart();
@@ -553,10 +477,10 @@ export default function PresidencyPage() {
         </div>
       </section>
 
-      {/* Sunday checklist */}
+      {/* Weekly checklist */}
       <section className="print:hidden">
         <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="font-serif text-xl font-bold">Sunday checklist</h2>
+          <h2 className="font-serif text-xl font-bold">Weekly checklist</h2>
           {target && (
             <p className="text-sm text-ink-2">
               For{" "}
@@ -842,123 +766,6 @@ export default function PresidencyPage() {
             </div>
           </>
         )}
-      </section>
-
-      {/* Security */}
-      <section className="print:hidden">
-        <h2 className="mb-1 font-serif text-xl font-bold">Passcode</h2>
-        <p className="mb-3 text-sm text-ink-2">
-          {lockEnabled
-            ? "Passcode is on. Everything this app stores on this device is encrypted — without the passcode it's unreadable."
-            : "Optional: set a passcode and everything this app stores on this device is encrypted. You'll enter it once each time you open the app."}
-        </p>
-        <div className="rounded-lg border border-line bg-white p-4">
-          <form onSubmit={savePin} className="flex flex-wrap items-center gap-2">
-            <input
-              type="password"
-              value={pin1}
-              onChange={(e) => setPin1(e.target.value)}
-              placeholder={lockEnabled ? "New passcode" : "Passcode"}
-              className="w-40 rounded-md border border-line px-3 py-1.5 text-sm placeholder:text-ink-3"
-            />
-            <input
-              type="password"
-              value={pin2}
-              onChange={(e) => setPin2(e.target.value)}
-              placeholder="Repeat it"
-              className="w-40 rounded-md border border-line px-3 py-1.5 text-sm placeholder:text-ink-3"
-            />
-            <button
-              type="submit"
-              disabled={pinBusy}
-              className="rounded-md bg-primary px-4 py-1.5 text-sm font-semibold text-white hover:bg-primary-dark disabled:opacity-50"
-            >
-              {pinBusy ? "Working…" : lockEnabled ? "Change passcode" : "Turn on"}
-            </button>
-            {lockEnabled && (
-              <button
-                type="button"
-                onClick={() => {
-                  disableLock();
-                  setPinMsg("Passcode off — data stored unencrypted again.");
-                }}
-                className="rounded-md border border-line-2 px-4 py-1.5 text-sm font-semibold text-ink hover:bg-surface"
-              >
-                Turn off
-              </button>
-            )}
-            {pinMsg && <span className="text-sm text-ink-2">{pinMsg}</span>}
-          </form>
-          <p className="mt-3 text-xs text-ink-3">
-            Each device sets its own passcode — have your counselors set one
-            too. If a passcode is forgotten the data can&apos;t be recovered
-            (that&apos;s the point), so keep an exported backup somewhere safe.
-            Note: exported and shared files are unencrypted — treat them like
-            a paper roster. The website itself holds no ward data; this
-            protects the copy on each device.
-          </p>
-        </div>
-      </section>
-
-      {/* Presidency sync */}
-      <section className="print:hidden">
-        <h2 className="mb-1 font-serif text-xl font-bold">
-          Presidency sync <span className="text-sm font-normal text-ink-3">(beta)</span>
-        </h2>
-        <p className="mb-3 text-sm text-ink-2">
-          Push this device&apos;s data to a private, encrypted cloud copy;
-          counselors pull it to theirs. Data leaves the device only as
-          ciphertext — the passphrase never does.
-        </p>
-        <div className="space-y-2 rounded-lg border border-line bg-white p-4">
-          <div className="flex flex-wrap gap-2">
-            <input
-              type="password"
-              value={syncToken}
-              onChange={(e) => setSyncToken(e.target.value)}
-              placeholder="GitHub token (gist scope)"
-              className="min-w-0 flex-1 rounded-md border border-line px-3 py-1.5 text-sm placeholder:text-ink-3"
-            />
-            <input
-              value={syncGist}
-              onChange={(e) => setSyncGist(e.target.value)}
-              placeholder="Gist ID (filled after first push)"
-              className="w-64 rounded-md border border-line px-3 py-1.5 text-sm placeholder:text-ink-3"
-            />
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <input
-              type="password"
-              value={syncPass}
-              onChange={(e) => setSyncPass(e.target.value)}
-              placeholder="Presidency passphrase"
-              className="min-w-0 flex-1 rounded-md border border-line px-3 py-1.5 text-sm placeholder:text-ink-3"
-            />
-            <button
-              onClick={doPush}
-              disabled={syncBusy}
-              className="rounded-md bg-primary px-4 py-1.5 text-sm font-semibold text-white hover:bg-primary-dark disabled:opacity-50"
-            >
-              {syncBusy ? "Working…" : "Push"}
-            </button>
-            <button
-              onClick={doPull}
-              disabled={syncBusy}
-              className="rounded-md border border-line-2 px-4 py-1.5 text-sm font-semibold text-ink hover:bg-surface disabled:opacity-50"
-            >
-              Pull
-            </button>
-            {syncMsg && <span className="text-sm text-ink-2">{syncMsg}</span>}
-          </div>
-          <p className="text-xs text-ink-3">
-            Setup once: the president creates a fine-grained GitHub token
-            (Settings → Developer settings → Tokens, <em>gists only</em>),
-            pushes, then shares the token, gist ID, and passphrase with
-            counselors in person or by AirDrop. Last push wins — push after
-            you make changes, pull before you rely on them. The token stays
-            on this device and is never included in Export files.
-          </p>
-        </div>
       </section>
 
       {/* Roles & responsibilities */}

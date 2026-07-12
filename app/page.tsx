@@ -255,7 +255,12 @@ export default function Dashboard() {
                       key={cls.id}
                       className="flex items-center justify-between gap-4 py-2.5 text-sm"
                     >
-                      <span className="text-ink-2">{cls.name}</span>
+                      <span className="min-w-0 text-ink-2">
+                        {cls.name}
+                        {cls.room && (
+                          <span className="text-ink-3"> · {cls.room}</span>
+                        )}
+                      </span>
                       <span
                         className={
                           eff.missing
@@ -286,7 +291,7 @@ export default function Dashboard() {
                 href="/presidency"
                 className="rounded-md border border-line-2 bg-white px-5 py-2 text-sm font-semibold text-ink transition-colors hover:bg-surface"
               >
-                Sunday checklist
+                Weekly checklist
               </Link>
             </div>
           </div>
