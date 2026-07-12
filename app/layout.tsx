@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Noto_Sans, Noto_Serif } from "next/font/google";
 import "./globals.css";
-import LockGate from "@/components/LockGate";
-import Nav from "@/components/Nav";
+import AppShell from "@/components/AppShell";
 
 const notoSans = Noto_Sans({
   variable: "--font-noto-sans",
@@ -54,10 +53,7 @@ export default function RootLayout({
         ))}
       </head>
       <body className="min-h-full">
-        <Nav />
-        <main className="mx-auto max-w-5xl px-4 pb-32 pt-8">
-          <LockGate>{children}</LockGate>
-        </main>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

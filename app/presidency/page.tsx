@@ -256,6 +256,12 @@ export default function PresidencyPage() {
         <div className="mb-1 flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="font-serif text-xl font-bold">Presidency meetings</h2>
           <div className="flex flex-wrap gap-2 print:hidden">
+            <Link
+              href="/meeting"
+              className="rounded-md bg-primary px-3 py-1 text-xs font-semibold text-white hover:bg-primary-dark"
+            >
+              Open slideshow
+            </Link>
             <button
               type="button"
               onClick={copyPacket}

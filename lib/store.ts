@@ -11,6 +11,11 @@ import {
 } from "./crypto";
 import { LESSONS, parseISODate, sundayOccurrence } from "./lessons";
 import {
+  MEETING_ACTIONS,
+  MEETING_DATE,
+  MEETING_NOTES,
+} from "./first-meeting";
+import {
   initSync,
   schedulePush,
   type SyncStatus,
@@ -125,19 +130,29 @@ export type AgendaItem = {
 };
 
 // Standing presidency-meeting agenda — editable in the app.
+// First meeting (July 2026) run-of-show; edit anytime on Presidency.
 export const DEFAULT_MEETING_AGENDA: AgendaItem[] = [
-  { id: "agenda-review", text: "Review assignments from the last meeting" },
+  { id: "m1", text: "Opening prayer — Trevor" },
+  { id: "m2", text: "Introduction — Jaxon (a sacred opportunity)" },
   {
-    id: "agenda-teachers",
-    text: "Teachers and classes — who needs support, a break, or a substitute plan",
+    id: "m3",
+    text: "Handbook: teaching in the Church and in the home",
   },
-  { id: "agenda-lessons", text: "Upcoming lessons and Sunday-evening kits" },
-  { id: "agenda-council", text: "Teacher council — next date and topic" },
-  { id: "agenda-ward", text: "Ward council — what the president should raise" },
+  { id: "m4", text: "President Rich’s counsel" },
   {
-    id: "agenda-pipeline",
-    text: "New teachers in process (pipeline and callings)",
+    id: "m5",
+    text: "Our two aims: Sunday School members look forward to — and the gospel taught powerfully at home",
   },
+  { id: "m6", text: "Initial plans — Trevor & Mark: visit a class each week" },
+  {
+    id: "m7",
+    text: "After each visit: private praise to the teacher + praise in the GroupMe",
+  },
+  {
+    id: "m8",
+    text: "Jaxon: Sunday-evening thoughts for teachers",
+  },
+  { id: "m9", text: "Onboard everyone to the app" },
 ];
 
 // A counselor's class visit — feeds the rotation and teacher councils.
@@ -171,7 +186,7 @@ export type AppData = {
   candidates: Candidate[];
 };
 
-const SCHEMA_VERSION = 9;
+const SCHEMA_VERSION = 10;
 
 const KEY = "sunday-school-v1";
 
@@ -237,6 +252,18 @@ const WARD_PRESIDENCY: PresidencyMember[] = [
   { role: "Secretary", name: "Marcos Menendez" },
 ];
 
+const FIRST_MEETING: Meeting = {
+  id: "meeting-first-2026-07-12",
+  date: MEETING_DATE,
+  notes: MEETING_NOTES,
+  actions: MEETING_ACTIONS.map((a, i) => ({
+    id: `fa-${i + 1}`,
+    text: a.text,
+    assignedTo: a.assignedTo,
+    done: false,
+  })),
+};
+
 const DEFAULT_DATA: AppData = {
   teachers: WARD_TEACHERS,
   classes: WARD_CLASSES,
@@ -250,7 +277,7 @@ const DEFAULT_DATA: AppData = {
   taught: {},
   councils: [],
   candidates: [],
-  meetings: [],
+  meetings: [FIRST_MEETING],
   meetingAgenda: DEFAULT_MEETING_AGENDA,
   visits: [],
 };
@@ -374,9 +401,19 @@ export function migrate(raw: unknown): AppData {
   }
 
   const meetingAgenda =
-    Array.isArray(d.meetingAgenda) && d.meetingAgenda.length > 0
+    Array.isArray(d.meetingAgenda) &&
+    d.meetingAgenda.length > 0 &&
+    (d.schemaVersion ?? 1) >= 10
       ? d.meetingAgenda
       : DEFAULT_MEETING_AGENDA;
+
+  let meetings = Array.isArray(d.meetings) ? d.meetings : [];
+  // v10: first presidency meeting agenda + seeded meeting for July 12.
+  if ((d.schemaVersion ?? 1) < 10) {
+    if (!meetings.some((m) => m.id === FIRST_MEETING.id || m.date === MEETING_DATE)) {
+      meetings = [FIRST_MEETING, ...meetings];
+    }
+  }
 
   return {
     ...DEFAULT_DATA,
@@ -394,7 +431,7 @@ export function migrate(raw: unknown): AppData {
     taught: d.taught ?? {},
     councils: Array.isArray(d.councils) ? d.councils : [],
     candidates: Array.isArray(d.candidates) ? d.candidates : [],
-    meetings: Array.isArray(d.meetings) ? d.meetings : [],
+    meetings,
     visits: Array.isArray(d.visits) ? d.visits : [],
   };
 }
