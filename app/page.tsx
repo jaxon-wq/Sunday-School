@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import LessonArt, { artworkFor } from "@/components/LessonArt";
 import { kitFor, kitMessage } from "@/lib/kits";
@@ -25,19 +25,29 @@ const STARTER_CLASSES = [
   "Youth 16–17",
 ];
 
+function subscribeNoop() {
+  return () => {};
+}
+
+function shouldShowStorageTip(): boolean {
+  if (typeof window === "undefined") return false;
+  if (localStorage.getItem("ss-ctx-tip-dismissed")) return false;
+  const standalone =
+    window.matchMedia("(display-mode: standalone)").matches ||
+    (navigator as unknown as { standalone?: boolean }).standalone === true;
+  const touch = "ontouchstart" in window;
+  return !standalone && touch;
+}
+
 export default function Dashboard() {
   const { data, update } = useAppData();
-  const [ctxTip, setCtxTip] = useState(false);
-  useEffect(() => {
-    // Safari tabs and the home-screen app keep SEPARATE copies of the data.
-    // Warn once when this looks like a phone browser (not the installed app).
-    const standalone =
-      window.matchMedia("(display-mode: standalone)").matches ||
-      (navigator as unknown as { standalone?: boolean }).standalone === true;
-    const touch = "ontouchstart" in window;
-    if (!standalone && touch && !localStorage.getItem("ss-ctx-tip-dismissed"))
-      setCtxTip(true);
-  }, []);
+  const tipFromStorage = useSyncExternalStore(
+    subscribeNoop,
+    shouldShowStorageTip,
+    () => false
+  );
+  const [tipDismissed, setTipDismissed] = useState(false);
+  const ctxTip = tipFromStorage && !tipDismissed;
   if (!data) return null;
 
   const today = todayStart();
@@ -53,6 +63,12 @@ export default function Dashboard() {
   const careAlert = teacherLoads(data).find(
     (l) => l.streak + (l.scheduledNext ? 1 : 0) >= CARE_THRESHOLD
   );
+  const tomorrow = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  })();
+  const tomorrowMeeting = data.meetings.find((m) => m.date === tomorrow);
 
   // Sunday-evening kit targets the teaching Sunday strictly AFTER today,
   // so on Sunday night it points at next week, not this morning.
@@ -129,12 +145,25 @@ export default function Dashboard() {
           <button
             onClick={() => {
               localStorage.setItem("ss-ctx-tip-dismissed", "1");
-              setCtxTip(false);
+              setTipDismissed(true);
             }}
             className="shrink-0 text-xs font-semibold text-primary hover:underline"
           >
             Got it
           </button>
+        </div>
+      )}
+
+      {tomorrowMeeting && (
+        <div className="rounded-lg border border-primary/30 bg-primary-soft px-4 py-3 text-sm text-ink">
+          <span className="font-semibold text-primary-dark">
+            Presidency meeting tomorrow.
+          </span>{" "}
+          Open the live agenda, notes, and assignments —{" "}
+          <Link href="/presidency" className="font-semibold text-primary underline">
+            go to Presidency
+          </Link>
+          .
         </div>
       )}
 

@@ -2,6 +2,11 @@
 
 import { useRef, useState } from "react";
 import {
+  applyLcrImport,
+  isLcrOrganizationsPaste,
+  parseLcrOrganizationsText,
+} from "@/lib/lcr-import";
+import {
   Candidate,
   PIPELINE_STAGES,
   migrate,
@@ -162,7 +167,33 @@ export default function TeachersPage() {
   }
 
   function importPasted() {
-    const rows = pasteText
+    const text = pasteText.trim();
+    if (!text) return;
+
+    // Full LCR Organizations and Callings print → presidency, classes, teachers
+    if (isLcrOrganizationsPaste(text)) {
+      const parsed = parseLcrOrganizationsText(text);
+      if (parsed.teachers.length === 0 && parsed.classes.length === 0) {
+        window.alert(parsed.warnings[0] ?? "Couldn't read that LCR print.");
+        return;
+      }
+      if (
+        !window.confirm(
+          `Load ${parsed.teachers.length} teachers and ${parsed.classes.length} classes from LCR` +
+            (parsed.skippedVacancies
+              ? ` (${parsed.skippedVacancies} vacancies skipped)`
+              : "") +
+            `? This replaces the roster on this device.`
+        )
+      )
+        return;
+      update((d) => applyLcrImport(d, parsed));
+      setPasteText("");
+      setShowPaste(false);
+      return;
+    }
+
+    const rows = text
       .split("\n")
       .map(parsePastedLine)
       .filter((r): r is NonNullable<typeof r> => r !== null);
@@ -265,7 +296,8 @@ export default function TeachersPage() {
           </h1>
           <p className="mt-1 text-sm text-ink-2">
             Set up your classes, add teachers, and assign who teaches what.
-            Populate from LCR when you get access.
+            Paste an LCR Organizations and Callings print to load the whole
+            roster at once.
           </p>
         </div>
         <div className="flex flex-wrap gap-2 text-sm">
@@ -309,25 +341,30 @@ export default function TeachersPage() {
 
       {showPaste && (
         <div className="rounded-lg border border-line bg-surface p-4">
-          <p className="text-sm font-semibold">Paste a list of teachers</p>
+          <p className="text-sm font-semibold">Paste from LCR</p>
           <p className="mt-0.5 text-xs text-ink-2">
-            One per line, from LCR or a spreadsheet: <code>Name, phone</code>{" "}
-            (phone optional; commas or tabs both work).
+            Best: paste an{" "}
+            <span className="font-semibold">Organizations and Callings</span>{" "}
+            Sunday School print — classes, rooms, teachers, and the presidency
+            load together. Or paste a simple list:{" "}
+            <code>Name, phone</code> (one per line).
           </p>
           <textarea
             value={pasteText}
             onChange={(e) => setPasteText(e.target.value)}
-            rows={5}
-            placeholder={"Sister Hale, 555-0102\nBrother Larsen\t555-0101"}
+            rows={8}
+            placeholder={
+              "Adult Sunday School Room: Gym\nSunday School Teacher Larsen, Brianne 31 May 2026\n…"
+            }
             className="mt-2 w-full rounded-md border border-line bg-white px-3 py-2 font-mono text-sm placeholder:text-ink-3"
           />
           <button
             onClick={importPasted}
             className="mt-2 rounded-md bg-primary px-4 py-1.5 text-sm font-semibold text-white hover:bg-primary-dark"
           >
-            Add{" "}
-            {pasteText.split("\n").filter((l) => l.trim()).length || ""}{" "}
-            teachers
+            {isLcrOrganizationsPaste(pasteText)
+              ? "Load LCR roster"
+              : `Add ${pasteText.split("\n").filter((l) => l.trim()).length || ""} teachers`}
           </button>
         </div>
       )}
