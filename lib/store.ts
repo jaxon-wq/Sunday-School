@@ -119,6 +119,27 @@ export type Meeting = {
   }[];
 };
 
+export type AgendaItem = {
+  id: string;
+  text: string;
+};
+
+// Standing presidency-meeting agenda — editable in the app.
+export const DEFAULT_MEETING_AGENDA: AgendaItem[] = [
+  { id: "agenda-review", text: "Review assignments from the last meeting" },
+  {
+    id: "agenda-teachers",
+    text: "Teachers and classes — who needs support, a break, or a substitute plan",
+  },
+  { id: "agenda-lessons", text: "Upcoming lessons and Sunday-evening kits" },
+  { id: "agenda-council", text: "Teacher council — next date and topic" },
+  { id: "agenda-ward", text: "Ward council — what the president should raise" },
+  {
+    id: "agenda-pipeline",
+    text: "New teachers in process (pipeline and callings)",
+  },
+];
+
 // A counselor's class visit — feeds the rotation and teacher councils.
 export type Visit = {
   id: string;
@@ -131,6 +152,7 @@ export type Visit = {
 export type AppData = {
   schemaVersion?: number;
   meetings: Meeting[];
+  meetingAgenda: AgendaItem[];
   visits: Visit[];
   teachers: Teacher[];
   classes: SSClass[];
@@ -149,7 +171,7 @@ export type AppData = {
   candidates: Candidate[];
 };
 
-const SCHEMA_VERSION = 8;
+const SCHEMA_VERSION = 9;
 
 const KEY = "sunday-school-v1";
 
@@ -229,6 +251,7 @@ const DEFAULT_DATA: AppData = {
   councils: [],
   candidates: [],
   meetings: [],
+  meetingAgenda: DEFAULT_MEETING_AGENDA,
   visits: [],
 };
 
@@ -350,6 +373,11 @@ export function migrate(raw: unknown): AppData {
     checklistItems = [...DEFAULT_CHECKLIST];
   }
 
+  const meetingAgenda =
+    Array.isArray(d.meetingAgenda) && d.meetingAgenda.length > 0
+      ? d.meetingAgenda
+      : DEFAULT_MEETING_AGENDA;
+
   return {
     ...DEFAULT_DATA,
     ...d,
@@ -359,6 +387,7 @@ export function migrate(raw: unknown): AppData {
     teachers,
     classes,
     checklistItems,
+    meetingAgenda,
     checklist: d.checklist ?? {},
     weekNotes: d.weekNotes ?? {},
     attendance: d.attendance ?? {},
