@@ -141,7 +141,7 @@ export const DEFAULT_MEETING_AGENDA: AgendaItem[] = [
   { id: "m4", text: "President Rich’s counsel" },
   {
     id: "m5",
-    text: "Our two aims: Sunday School members look forward to — and gospel teaching transformed in the home",
+    text: "Our two aims: Sunday School members look forward to — and transform how the gospel is taught at home",
   },
   { id: "m6", text: "Initial plans — Trevor & Mark: visit a class each week" },
   {
