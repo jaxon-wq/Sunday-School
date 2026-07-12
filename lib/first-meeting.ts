@@ -23,7 +23,7 @@ export const MEETING_AGENDA_SEED: { id: string; text: string }[] = [
   { id: "m4", text: "President Rich’s counsel" },
   {
     id: "m5",
-    text: "Our two aims: Sunday School members look forward to — and the gospel taught powerfully at home",
+    text: "Our two aims: Sunday School members look forward to — and transform how the gospel is taught at home",
   },
   { id: "m6", text: "Initial plans — Trevor & Mark: visit a class each week" },
   {
@@ -47,7 +47,7 @@ President Rich quote
 
 Two aims:
 1) Make Sunday School the block members look forward to
-2) Help transform how the gospel is taught in the home — home-centered, church-supported
+2) Transform how the gospel is taught in the homes of this ward
 
 Plans:
 • Trevor & Mark — attend a different Sunday School class each week; after, send (1) a private note to the teacher with sincere praise only, and (2) similar praise in the Sunday School GroupMe. Praise and uplift.
@@ -130,7 +130,7 @@ export const SLIDES: Slide[] = [
       },
       {
         n: "02",
-        text: "Transform how the gospel is taught in the home — until every household carries the fire, not just the classroom spark.",
+        text: "Transform how the gospel is taught in the homes of this ward.",
       },
     ],
   },
