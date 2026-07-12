@@ -33,10 +33,23 @@ export default function SchedulePage() {
   const nextSunday = LESSONS.find(
     (l) => parseISODate(l.sunday) >= todayStart()
   )?.sunday;
+  // Keep the most recent past teaching Sunday visible so counselors can
+  // check off who taught without hunting under "Show past weeks".
+  const lastTeachingSunday = [...LESSONS]
+    .reverse()
+    .find(
+      (l) =>
+        isPastSunday(l.sunday) && isTeachingSunday(l.sunday, meetWeeks)
+    )?.sunday;
 
   const visible = LESSONS.filter((l) => {
     if (teachingOnly && !isTeachingSunday(l.sunday, meetWeeks)) return false;
-    if (!showPast && isPastSunday(l.sunday)) return false;
+    if (
+      !showPast &&
+      isPastSunday(l.sunday) &&
+      l.sunday !== lastTeachingSunday
+    )
+      return false;
     return true;
   });
 
@@ -63,6 +76,18 @@ export default function SchedulePage() {
     });
   }
 
+  function setTaught(sunday: string, classId: string, teacherId: string) {
+    update((d) => {
+      const taught = { ...d.taught };
+      const day = { ...(taught[sunday] ?? {}) };
+      if (teacherId) day[classId] = teacherId;
+      else delete day[classId];
+      if (Object.keys(day).length) taught[sunday] = day;
+      else delete taught[sunday];
+      return { ...d, taught };
+    });
+  }
+
   function setWeekNote(sunday: string, note: string) {
     update((d) => {
       const weekNotes = { ...d.weekNotes };
@@ -72,8 +97,6 @@ export default function SchedulePage() {
     });
   }
 
-  let lastMonth = "";
-
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -82,8 +105,8 @@ export default function SchedulePage() {
             2026 Schedule
           </h1>
           <p className="mt-1 text-sm text-ink-2">
-            Come, Follow Me — Old Testament. Assign substitutes, send texts, and
-            add notes for teaching Sundays.{" "}
+            Come, Follow Me — Old Testament. Assign substitutes, check off who
+            taught, send texts, and add notes.{" "}
             <Link href="/month" className="font-semibold text-primary hover:underline">
               Month view →
             </Link>
@@ -140,13 +163,12 @@ export default function SchedulePage() {
       </div>
 
       <div className="space-y-3">
-        {visible.map((lesson) => {
+        {visible.map((lesson, idx) => {
           const teaching = isTeachingSunday(lesson.sunday, meetWeeks);
           const past = isPastSunday(lesson.sunday);
           const isNext = lesson.sunday === nextSunday;
           const month = monthOf(lesson);
-          const showMonth = month !== lastMonth;
-          lastMonth = month;
+          const showMonth = idx === 0 || monthOf(visible[idx - 1]) !== month;
           const sundayShort = formatSunday(lesson.sunday).replace(
             "Sunday, ",
             ""
@@ -327,6 +349,89 @@ export default function SchedulePage() {
                                 </div>
                               );
                             })}
+                          </div>
+                        )}
+                        {data.classes.length > 0 &&
+                          (past || isNext || lesson.sunday === lastTeachingSunday) && (
+                          <div className="space-y-1.5 rounded-md bg-surface px-3 py-2">
+                            <p className="text-[11px] font-bold uppercase tracking-wider text-ink-3">
+                              Who taught{" "}
+                              <span className="font-normal normal-case tracking-normal">
+                                — check off after class (feeds teacher care)
+                              </span>
+                            </p>
+                            <div className="grid gap-1.5 sm:grid-cols-2">
+                              {data.classes.map((cls) => {
+                                const ov = findOverride(
+                                  data,
+                                  lesson.sunday,
+                                  cls.id
+                                );
+                                const recorded =
+                                  data.taught[lesson.sunday]?.[cls.id] ?? "";
+                                const suggested =
+                                  ov?.teacherId ?? cls.teacherIds[0] ?? "";
+                                // Prefer class teachers, then the rest
+                                const options = [
+                                  ...data.teachers.filter((t) =>
+                                    cls.teacherIds.includes(t.id)
+                                  ),
+                                  ...data.teachers.filter(
+                                    (t) => !cls.teacherIds.includes(t.id)
+                                  ),
+                                ];
+                                return (
+                                  <label
+                                    key={cls.id}
+                                    className="flex items-center gap-2 text-sm"
+                                  >
+                                    <span className="w-28 shrink-0 truncate text-ink-2 sm:w-32">
+                                      {cls.name}
+                                    </span>
+                                    <select
+                                      value={recorded}
+                                      onChange={(e) =>
+                                        setTaught(
+                                          lesson.sunday,
+                                          cls.id,
+                                          e.target.value
+                                        )
+                                      }
+                                      className={`min-w-0 flex-1 rounded-md border px-2 py-1 ${
+                                        recorded
+                                          ? "border-confirm/40 bg-white text-ink"
+                                          : "border-line-2 bg-white text-ink-3"
+                                      }`}
+                                    >
+                                      <option value="">Not yet</option>
+                                      {options.map((t) => (
+                                        <option key={t.id} value={t.id}>
+                                          {t.name}
+                                          {t.id === suggested && !recorded
+                                            ? " (assigned)"
+                                            : ""}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    {!recorded && suggested && (
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          setTaught(
+                                            lesson.sunday,
+                                            cls.id,
+                                            suggested
+                                          )
+                                        }
+                                        className="shrink-0 text-xs font-semibold text-primary hover:underline"
+                                      >
+                                        Confirm
+                                      </button>
+                                    )}
+                                  </label>
+                                );
+                              })}
+                            </div>
                           </div>
                         )}
                         {data.classes.length > 0 && (

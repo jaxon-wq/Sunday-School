@@ -652,16 +652,28 @@ export default function PresidencyPage() {
       <section className="print:hidden">
         <h2 className="mb-1 font-serif text-xl font-bold">Teacher care</h2>
         <p className="mb-3 text-sm text-ink-2">
-          Under the weekly schedule a faithful teacher can quietly carry too
-          much. These counts exist so a person gets noticed — not as a
-          scoreboard.
+          Counts come only from Sundays counselors check off on the Schedule —
+          who actually taught, not who was assigned. Unlogged weeks don&apos;t
+          invent a streak.
         </p>
         {(() => {
+          const hasLogs = Object.keys(data!.taught).length > 0;
           const loads = teacherLoads(data!).filter(
             (l) =>
               data!.classes.some((c) => c.teacherIds.includes(l.teacher.id)) ||
-              l.taughtOfLast8 > 0
+              l.taughtOfLast8 > 0 ||
+              l.streak > 0
           );
+          if (!hasLogs)
+            return (
+              <p className="text-sm text-ink-3">
+                After each Sunday School, open{" "}
+                <Link href="/schedule" className="font-semibold text-primary underline">
+                  Schedule
+                </Link>{" "}
+                and mark who taught each class. Streaks will build from there.
+              </p>
+            );
           if (loads.length === 0)
             return (
               <p className="text-sm text-ink-3">
@@ -706,7 +718,7 @@ export default function PresidencyPage() {
                       </span>
                     )}
                     <span className="text-xs text-ink-3">
-                      · taught {l.taughtOfLast8} of the last 8
+                      · taught {l.taughtOfLast8} of last 8 logged
                     </span>
                     {l.teacher.phone && effective >= CARE_WATCH && (
                       <a
