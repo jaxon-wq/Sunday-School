@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>I Am Doing a Great Work — Teacher Slides</title>
+<style>
+  :root {
+    --ink: #1a2228;
+    --muted: #5c6b73;
+    --line: #d5dde2;
+    --teal: #0b5f78;
+    --bg: #f4f7f9;
+    --white: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; height:100%; background:#0e1418; color:var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    overflow: hidden; touch-action: pan-y; }
+  .deck { position: relative; width:100%; height:100%; }
+  .slide {
+    position:absolute; inset:0; display:none; background:var(--bg);
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .slide.active { display:block; }
+  .content { position:absolute; inset:0; padding: clamp(28px, 6vw, 72px); display:flex; flex-direction:column; }
+  .content.center { justify-content:center; align-items:flex-start; }
+  .content.bottom { justify-content:flex-end; }
+  .content.narrow { max-width: 920px; margin:0 auto; width:100%; left:0; right:0; }
+  .hero { position:absolute; inset:0; background-size:cover; background-position:center 30%; filter:grayscale(0.1); }
+  .veil { position:absolute; inset:0; background:linear-gradient(to top, rgba(10,14,18,.88) 10%, rgba(10,14,18,.25) 55%, rgba(10,14,18,.35) 100%); }
+  .bottom h1, .bottom .kicker.light, .bottom .sub.light { color:#f4efe6; position:relative; }
+  h1 { font-family: "Iowan Old Style", Palatino, Georgia, serif; font-size: clamp(34px, 6vw, 64px); line-height:1.08; margin:0; letter-spacing:-0.02em; white-space:pre-line; }
+  h2 { font-family: "Iowan Old Style", Palatino, Georgia, serif; font-size: clamp(28px, 4.5vw, 48px); line-height:1.15; margin:0 0 18px; letter-spacing:-0.02em; }
+  .section-title { white-space:pre-line; }
+  .kicker { color:var(--teal); font-size:12px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; margin:0 0 14px; }
+  .kicker.light { color:#e2c48a; }
+  .sub { margin:14px 0 0; font-size:18px; color:var(--muted); }
+  .sub.light { color:#c8c0b4; }
+  .verse { font-family: "Iowan Old Style", Palatino, Georgia, serif; font-size: clamp(22px, 3.4vw, 34px); line-height:1.35; font-style:italic; color:var(--ink); margin:0; }
+  .ref { margin:18px 0 0; color:var(--muted); font-size:13px; letter-spacing:.08em; text-transform:uppercase; font-weight:700; }
+  .note { margin:16px 0 0; color:var(--teal); font-size:17px; font-weight:600; }
+  .body { font-size: clamp(18px, 2.4vw, 24px); line-height:1.5; color:#2a3338; margin:0; max-width: 40rem; }
+  .body.big { font-family: "Iowan Old Style", Palatino, Georgia, serif; font-size: clamp(22px, 3vw, 30px); line-height:1.4; }
+  .q { font-family: "Iowan Old Style", Palatino, Georgia, serif; font-size: clamp(26px, 4vw, 40px); line-height:1.25; margin:0; }
+  .num { width:56px; height:56px; border-radius:14px; background:var(--teal); color:white; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:22px; margin-bottom:18px; }
+  .who { display:flex; align-items:center; gap:14px; margin-bottom:22px; }
+  .avatar { width:56px; height:56px; border-radius:50%; object-fit:cover; }
+  .name { margin:0; font-weight:700; font-size:16px; }
+  .meta { margin:3px 0 0; color:var(--muted); font-size:13px; }
+  .gl { display:inline-block; margin-top:28px; background:var(--teal); color:white !important; text-decoration:none; font-weight:700; font-size:14px; padding:14px 18px; border-radius:10px; }
+  .bullets { margin:10px 0 0; padding:0; list-style:none; width:100%; }
+  .bullets li { font-family: "Iowan Old Style", Palatino, Georgia, serif; font-size: clamp(20px, 2.8vw, 28px); padding:16px 0; border-bottom:1px solid var(--line); }
+  .sign { margin-top:28px; font-family: "Iowan Old Style", Palatino, Georgia, serif; font-size:22px; }
+  .progress { position:absolute; right: clamp(16px, 3vw, 28px); bottom: clamp(14px, 3vw, 24px); color:var(--muted); font-size:12px; font-weight:600; letter-spacing:.04em; }
+  .nav { position:absolute; inset:0; display:flex; z-index:5; }
+  .nav button { flex:1; background:transparent; border:0; cursor:pointer; }
+  .hint { position:absolute; left:50%; transform:translateX(-50%); bottom:18px; z-index:6; color:var(--muted); font-size:12px; letter-spacing:.06em; text-transform:uppercase; }
+  .chrome { position:absolute; top:14px; left:16px; z-index:7; display:flex; gap:8px; }
+  .chrome button { background:rgba(255,255,255,.9); border:1px solid var(--line); border-radius:8px; padding:8px 10px; font-size:12px; font-weight:700; color:var(--ink); cursor:pointer; }
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+<section class="slide" data-i="0">
+<div class="hero" style="background-image:url('../assets/nehemiah-walls-hero.jpg')"></div>
+<div class="veil"></div>
+<div class="content bottom">
+<p class="kicker light">Willow Haven · Sunday School · Week 31</p>
+<h1>“I Am Doing a Great Work”</h1>
+<p class="sub light">Ezra 1; 3–7 · Nehemiah 2; 4–6; 8</p>
+</div>
+<div class="progress"><span>1 / 33</span></div>
+</section>
+<section class="slide" data-i="1">
+<div class="content center narrow">
+<p class="kicker">How to use this</p>
+<h2>Pick a lane — or drive the whole road</h2>
+<p class="body">This deck has three themes. Jump to the one you feel drawn to, or teach all three. Nothing here is required. You and the Lord decide what your class needs.</p>
+</div>
+<div class="progress"><span>2 / 33</span></div>
+</section>
+<section class="slide" data-i="2">
+<div class="content center narrow">
+<p class="kicker">The three themes</p>
+<h2>If I were teaching, I’d lean here</h2>
+<ul class="bullets">
+<li>1 — The Lord inspires people to accomplish His purposes</li>
+<li>2 — “I am doing a great work, so that I cannot come down”</li>
+<li>3 — When God gives a work, He strengthens our hands</li>
+</ul></div>
+<div class="progress"><span>3 / 33</span></div>
+</section>
+<section class="slide" data-i="3">
+<div class="content center">
+<div class="num">1</div>
+<p class="kicker">Theme</p>
+<h1 class="section-title">The Lord inspires people<br>to accomplish His purposes</h1>
+</div>
+<div class="progress"><span>4 / 33</span></div>
+</section>
+<section class="slide" data-i="4">
+<div class="content center narrow">
+<p class="kicker">Scripture</p>
+<p class="verse">“That saith of Cyrus, He is my shepherd, and shall perform all my pleasure: even saying to Jerusalem, Thou shalt be built; and to the temple, Thy foundation shall be laid.”</p>
+<p class="note">Named ~150 years before he was born.</p>
+<p class="ref">Isaiah 44:28</p>
+<a class="gl" href="https://www.churchofjesuschrist.org/study/scriptures/ot/isa/44?lang=eng&id=p28#p28">Open in Gospel Library →</a>
+</div>
+<div class="progress"><span>5 / 33</span></div>
+</section>
+<section class="slide" data-i="5">
+<div class="content center narrow">
+<p class="kicker">Scripture</p>
+<p class="verse">“…the Lord stirred up the spirit of Cyrus king of Persia…”</p>
+<p class="note">A Persian king. Not of the covenant people. Still an instrument.</p>
+<p class="ref">Ezra 1:1</p>
+<a class="gl" href="https://www.churchofjesuschrist.org/study/scriptures/ot/ezra/1?lang=eng&id=p1#p1">Open in Gospel Library →</a>
+</div>
+<div class="progress"><span>6 / 33</span></div>
+</section>
+<section class="slide" data-i="6">
+<div class="content center narrow">
+<p class="kicker">Place yourself there</p>
+
+<p class="body big">You are a captive in a foreign empire. Your temple is ash. Then a king who does not share your faith announces that your God has charged him to rebuild the house of the Lord — and he will pay for it.</p>
+</div>
+<div class="progress"><span>7 / 33</span></div>
+</section>
+<section class="slide" data-i="7">
+<div class="content center narrow">
+<p class="kicker">Question</p>
+<p class="q">What does that suggest to you about the Lord and His work?</p>
+</div>
+<div class="progress"><span>8 / 33</span></div>
+</section>
+<section class="slide" data-i="8">
+<div class="content center narrow">
+<div class="who">
+<img class="avatar" src="../assets/portraits/benson.jpg" alt="">
+<div>
+<p class="name">Ezra Taft Benson</p>
+<p class="meta">April 1972</p>
+</div></div>
+<p class="verse">“God, the Father of us all, uses the men of the earth, especially good men, to accomplish his purposes. It has been true in the past, it is true today, it will be true in the future.”</p>
+<a class="gl" href="https://www.churchofjesuschrist.org/study/general-conference/1972/04/civic-standards-for-the-faithful-saints?lang=eng">Open in Gospel Library →</a>
+</div>
+<div class="progress"><span>9 / 33</span></div>
+</section>
+<section class="slide" data-i="9">
+<div class="content center narrow">
+<div class="who">
+<img class="avatar" src="../assets/portraits/whitney.jpg" alt="">
+<div>
+<p class="name">Orson F. Whitney</p>
+<p class="meta">April 1928</p>
+</div></div>
+<p class="verse">“God is using more than one people for the accomplishment of His great and marvelous work. The Latter-day Saints cannot do it all. It is too vast, too arduous for any one people.”</p>
+<a class="gl" href="https://www.churchofjesuschrist.org/study/general-conference/1972/04/civic-standards-for-the-faithful-saints?lang=eng">Open in Gospel Library →</a>
+</div>
+<div class="progress"><span>10 / 33</span></div>
+</section>
+<section class="slide" data-i="10">
+<div class="content center narrow">
+<div class="who">
+<img class="avatar" src="../assets/portraits/jfs.jpg" alt="">
+<div>
+<p class="name">Joseph Fielding Smith</p>
+<p class="meta">On the Reformers</p>
+</div></div>
+<p class="verse">“In preparation for this restoration the Lord raised up noble men, such as Luther, Calvin, Knox, and others whom we call reformers… The work of the reformers was of great importance, but it was a preparatory work.”</p>
+<a class="gl" href="https://www.churchofjesuschrist.org/study/manual/church-history-in-the-fulness-of-times/chapter-one?lang=eng">Open in Gospel Library →</a>
+</div>
+<div class="progress"><span>11 / 33</span></div>
+</section>
+<section class="slide" data-i="11">
+<div class="content center narrow">
+<p class="kicker">Go deeper</p>
+<h2>“Whether he knew it or not”</h2>
+<p class="body">Wilford Woodruff said of Cyrus: whether he knew it or not, it looked as though he lived by inspiration in all his movements. Sometimes the Lord stirs a life long before that person understands the stirring.</p>
+</div>
+<div class="progress"><span>12 / 33</span></div>
+</section>
+<section class="slide" data-i="12">
+<div class="content center narrow">
+<p class="kicker">Sit with this</p>
+<p class="q">Where have you watched the Lord stir someone — maybe outside the Church — to move His work forward?</p>
+</div>
+<div class="progress"><span>13 / 33</span></div>
+</section>
+<section class="slide" data-i="13">
+<div class="content center">
+<div class="num">2</div>
+<p class="kicker">Theme</p>
+<h1 class="section-title">“I am doing a great work,<br>so that I cannot come down”</h1>
+</div>
+<div class="progress"><span>14 / 33</span></div>
+</section>
+<section class="slide" data-i="14">
+<div class="content center narrow">
+<p class="kicker">Notice the strategy</p>
+<h2>The danger looked reasonable</h2>
+<p class="body">Nehemiah’s enemies did not only threaten. They invited. Four times they asked him to leave the wall for a meeting — under the pretense of resolving conflict. Diplomacy on the surface. A trap underneath.</p>
+</div>
+<div class="progress"><span>15 / 33</span></div>
+</section>
+<section class="slide" data-i="15">
+<div class="content center narrow">
+<p class="kicker">Scripture</p>
+<p class="verse">“Come, let us meet together… But they thought to do me mischief. And I sent messengers unto them, saying, I am doing a great work, so that I cannot come down…”</p>
+<p class="ref">Nehemiah 6:2–3</p>
+<a class="gl" href="https://www.churchofjesuschrist.org/study/scriptures/ot/neh/6?lang=eng&id=p2-p3#p2">Open in Gospel Library →</a>
+</div>
+<div class="progress"><span>16 / 33</span></div>
+</section>
+<section class="slide" data-i="16">
+<div class="content center narrow">
+<p class="kicker">Place yourself there</p>
+
+<p class="body big">You are exhausted. The wall is half-built. Critics are loud. Then comes an invitation that sounds mature, peacemaking, even wise — leave the work for a moment and talk it out.</p>
+</div>
+<div class="progress"><span>17 / 33</span></div>
+</section>
+<section class="slide" data-i="17">
+<div class="content center narrow">
+<p class="kicker">Question</p>
+<p class="q">How do you know when “come down” is wisdom… and when it is a distraction dressed as wisdom?</p>
+</div>
+<div class="progress"><span>18 / 33</span></div>
+</section>
+<section class="slide" data-i="18">
+<div class="content center narrow">
+<div class="who">
+<img class="avatar" src="../assets/portraits/uchtdorf.jpg" alt="">
+<div>
+<p class="name">Dieter F. Uchtdorf</p>
+<p class="meta">April 2009</p>
+</div></div>
+<p class="verse">“What a remarkable response! With that clear and unchanging purpose of heart and mind… the walls of Jerusalem rose until they were rebuilt in an astonishing 52 days. Nehemiah refused to allow distractions to prevent him from doing what the Lord wanted him to do.”</p>
+<a class="gl" href="https://www.churchofjesuschrist.org/study/general-conference/2009/04/we-are-doing-a-great-work-and-cannot-come-down?lang=eng">Open in Gospel Library →</a>
+</div>
+<div class="progress"><span>19 / 33</span></div>
+</section>
+<section class="slide" data-i="19">
+<div class="content center narrow">
+<div class="who">
+<img class="avatar" src="../assets/portraits/uchtdorf.jpg" alt="">
+<div>
+<p class="name">Dieter F. Uchtdorf</p>
+<p class="meta">Same address</p>
+</div></div>
+<p class="verse">“Our Heavenly Father seeks those who refuse to allow the trivial to hinder them in their pursuit of the eternal.”</p>
+<a class="gl" href="https://www.churchofjesuschrist.org/study/general-conference/2009/04/we-are-doing-a-great-work-and-cannot-come-down?lang=eng">Open in Gospel Library →</a>
+</div>
+<div class="progress"><span>20 / 33</span></div>
+</section>
+<section class="slide" data-i="20">
+<div class="content center narrow">
+<p class="kicker">Go deeper</p>
+<h2>Opposition is often a distraction campaign</h2>
+<p class="body">In Nehemiah, the enemy’s favorite tools are ridicule, rumor, fear, and invitation. Not always a frontal assault — a pull sideways. The question is rarely “Will I quit?” More often: “Will I come down?”</p>
+</div>
+<div class="progress"><span>21 / 33</span></div>
+</section>
+<section class="slide" data-i="21">
+<div class="content center narrow">
+<p class="kicker">Sit with this</p>
+<p class="q">What keeps pulling you down off your wall — and what would staying up cost you?</p>
+</div>
+<div class="progress"><span>22 / 33</span></div>
+</section>
+<section class="slide" data-i="22">
+<div class="content center">
+<div class="num">3</div>
+<p class="kicker">Theme</p>
+<h1 class="section-title">When God gives a work,<br>He strengthens our hands</h1>
+</div>
+<div class="progress"><span>23 / 33</span></div>
+</section>
+<section class="slide" data-i="23">
+<div class="content center narrow">
+<p class="kicker">Read carefully</p>
+<h2>He was already afraid</h2>
+<p class="body">Nehemiah does not pray after the fear leaves. He prays in it: “For they all made us afraid… Now therefore, O God, strengthen my hands.” Strength is not the absence of fear. It is what God puts in your hands while your knees are still shaking.</p>
+</div>
+<div class="progress"><span>24 / 33</span></div>
+</section>
+<section class="slide" data-i="24">
+<div class="content center narrow">
+<p class="kicker">Scripture</p>
+<p class="verse">“For they all made us afraid, saying, Their hands shall be weakened from the work, that it be not done. Now therefore, O God, strengthen my hands.”</p>
+<p class="ref">Nehemiah 6:9</p>
+<a class="gl" href="https://www.churchofjesuschrist.org/study/scriptures/ot/neh/6?lang=eng&id=p9#p9">Open in Gospel Library →</a>
+</div>
+<div class="progress"><span>25 / 33</span></div>
+</section>
+<section class="slide" data-i="25">
+<div class="content center narrow">
+<p class="kicker">Scripture</p>
+<p class="verse">“for the people had a mind to work.”<br><br><br><br>“…according to the good hand of my God upon me.”</p>
+<p class="note">Willingness and divine help show up together.</p>
+<p class="ref">Nehemiah 4:6 · Nehemiah 2:8</p>
+<a class="gl" href="https://www.churchofjesuschrist.org/study/scriptures/ot/neh/4?lang=eng&id=p6#p6">Open in Gospel Library →</a>
+</div>
+<div class="progress"><span>26 / 33</span></div>
+</section>
+<section class="slide" data-i="26">
+<div class="content center narrow">
+<div class="who">
+<img class="avatar" src="../assets/portraits/lee.jpg" alt="">
+<div>
+<p class="name">Harold B. Lee</p>
+<p class="meta">As taught by Thomas S. Monson</p>
+</div></div>
+<p class="verse">“Whom the Lord calls, the Lord qualifies.”</p>
+<a class="gl" href="https://www.churchofjesuschrist.org/study/manual/teachings-of-presidents-of-the-church-thomas-s-monson/chapter-14-whom-the-lord-calls-the-lord-qualifies?lang=eng">Open in Gospel Library →</a>
+</div>
+<div class="progress"><span>27 / 33</span></div>
+</section>
+<section class="slide" data-i="27">
+<div class="content center narrow">
+<div class="who">
+<img class="avatar" src="../assets/portraits/monson.jpg" alt="">
+<div>
+<p class="name">Thomas S. Monson</p>
+<p class="meta">October 2008</p>
+</div></div>
+<p class="verse">“If we are on the Lord’s errand, we are entitled to the Lord’s help.”</p>
+<a class="gl" href="https://www.churchofjesuschrist.org/study/general-conference/2008/10/to-learn-to-do-to-be?lang=eng">Open in Gospel Library →</a>
+</div>
+<div class="progress"><span>28 / 33</span></div>
+</section>
+<section class="slide" data-i="28">
+<div class="content center narrow">
+<p class="kicker">Scripture</p>
+<p class="verse">“I will go before your face. I will be on your right hand and on your left, and my Spirit shall be in your hearts, and mine angels round about you, to bear you up.”</p>
+<p class="ref">Doctrine and Covenants 84:88</p>
+<a class="gl" href="https://www.churchofjesuschrist.org/study/scriptures/dc-testament/dc/84?lang=eng&id=p88#p88">Open in Gospel Library →</a>
+</div>
+<div class="progress"><span>29 / 33</span></div>
+</section>
+<section class="slide" data-i="29">
+<div class="content center narrow">
+<p class="kicker">Place yourself there</p>
+
+<p class="body big">The calling already feels bigger than you. You can feel the fear the critics want you to feel: your hands will be weakened; it will not be done. What do you ask God for in that exact moment?</p>
+</div>
+<div class="progress"><span>30 / 33</span></div>
+</section>
+<section class="slide" data-i="30">
+<div class="content center narrow">
+<p class="kicker">Sit with this</p>
+<p class="q">When has the Lord strengthened your hands for a work that felt bigger than you — and what did that feel like in the moment?</p>
+</div>
+<div class="progress"><span>31 / 33</span></div>
+</section>
+<section class="slide" data-i="31">
+<div class="content center narrow">
+<p class="kicker">One more tool</p>
+<h2>Uchtdorf’s whole talk is this lesson</h2>
+<p class="body">If you only add one extra: “We Are Doing a Great Work and Cannot Come Down” (April 2009).</p>
+<a class="gl" href="https://www.churchofjesuschrist.org/study/general-conference/2009/04/we-are-doing-a-great-work-and-cannot-come-down?lang=eng">Open in Gospel Library →</a>
+</div>
+<div class="progress"><span>32 / 33</span></div>
+</section>
+<section class="slide" data-i="32">
+<div class="content center narrow">
+<h1>Thank you for teaching</h1>
+<p class="body">No homework. No expectation to use any of this. You and the Lord know your class. Go do the great work.</p>
+<p class="sign">— Jaxon</p>
+</div>
+<div class="progress"><span>33 / 33</span></div>
+</section>
+<div class="nav" aria-hidden="true"><button id="prevZone" aria-label="Previous"></button><button id="nextZone" aria-label="Next"></button></div>
+<div class="chrome"><button id="fsBtn" type="button">Fullscreen</button></div>
+<p class="hint" id="hint">Tap sides · ← →</p>
+</div>
+<script>
+(() => {
+  const slides = [...document.querySelectorAll('.slide')];
+  let i = 0;
+  const show = (n) => {
+    i = Math.max(0, Math.min(slides.length-1, n));
+    slides.forEach((s, idx) => s.classList.toggle('active', idx === i));
+    history.replaceState(null, '', '#' + (i+1));
+  };
+  const fromHash = () => {
+    const n = parseInt((location.hash||'#1').slice(1), 10);
+    show(Number.isFinite(n) ? n-1 : 0);
+  };
+  document.getElementById('prevZone').onclick = (e) => { e.stopPropagation(); show(i-1); };
+  document.getElementById('nextZone').onclick = (e) => { e.stopPropagation(); show(i+1); };
+  window.addEventListener('keydown', (e) => {
+    if (['ArrowRight','Space','PageDown'].includes(e.code) || e.key === ' ') { e.preventDefault(); show(i+1); }
+    if (['ArrowLeft','PageUp'].includes(e.code)) { e.preventDefault(); show(i-1); }
+    if (e.key === 'Home') show(0);
+    if (e.key === 'End') show(slides.length-1);
+  });
+  let x0 = null;
+  window.addEventListener('touchstart', (e) => { x0 = e.changedTouches[0].clientX; }, {passive:true});
+  window.addEventListener('touchend', (e) => {
+    if (x0 == null) return;
+    const dx = e.changedTouches[0].clientX - x0;
+    if (Math.abs(dx) > 40) show(i + (dx < 0 ? 1 : -1));
+    x0 = null;
+  }, {passive:true});
+  document.getElementById('fsBtn').onclick = () => {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+    else document.exitFullscreen?.();
+  };
+  window.addEventListener('hashchange', fromHash);
+  fromHash();
+  setTimeout(() => { const h=document.getElementById('hint'); if(h) h.style.opacity='0'; }, 3500);
+})();
+</script>
+</body>
+</html>
