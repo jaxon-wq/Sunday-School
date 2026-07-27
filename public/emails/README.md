@@ -4,16 +4,18 @@ HTML emails the presidency can send Sunday evening — designed mobile-first for
 
 ## Week 31 — “I Am Doing a Great Work”
 
-- Preview in browser: [`week-31-great-work.html`](./week-31-great-work.html)
-- Self-contained sendable copy (embedded hero image): ask the agent for `/opt/cursor/artifacts/week-31-instructor-email.html`, or regenerate by embedding `assets/nehemiah-walls-hero.jpg`
+- Preview: [`week-31-great-work.html`](./week-31-great-work.html)
+- Download (self-contained): [GitHub Release](https://github.com/jaxon-wq/Sunday-School/releases/tag/week-31-email)
 
 ### Suggested subject / preview
 
-- **Subject:** I am doing a great work
-- **Preview text:** Three theses for Sunday. Pick one. Build the hour around it.
+- **Subject:** A few resources for this Sunday
+- **Preview text:** Optional — three themes, not a script.
 
-### Sending tips (iPhone)
+### What’s included
 
-1. Open the self-contained HTML in Safari.
-2. Share → Mail (sends as a file teachers can open), **or**
-3. On a Mac: open the HTML in Chrome/Safari → select all → copy → paste into Mail.app compose (Apple Mail keeps most of the HTML).
+- Warm intro that these are resources, not a teaching script
+- Three themes with scripture links
+- Quote cards with speaker thumbnails + hyperlinks to sources
+- One “Sit with this” question per theme
+- Uchtdorf talk + Come, Follow Me CTAs
