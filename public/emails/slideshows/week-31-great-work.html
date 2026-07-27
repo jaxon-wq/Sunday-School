@@ -154,7 +154,7 @@
     font-family:"Iowan Old Style",Palatino,Georgia,serif; font-weight:700;
     font-size:clamp(300px,44vw,660px); line-height:.8; color:#ffffff; opacity:.05;
     pointer-events:none; user-select:none; }
-  .s-discuss .q { color:#f6f2ea; max-width:22ch; }
+  .s-discuss .q { color:#f6f2ea; max-width:26ch; }
   .s-discuss .kicker { color:var(--sand-light); }
   .q { font-family:"Iowan Old Style","Palatino Linotype",Palatino,"New York",Georgia,serif;
     font-size:clamp(28px,4.4vw,58px); line-height:1.16; margin:0; letter-spacing:-.02em; font-weight:700; }
@@ -176,10 +176,12 @@
   .footer .where { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .nav { position:absolute; inset:0; display:flex; z-index:5; }
   .nav button { flex:1; background:transparent; border:0; cursor:pointer; -webkit-tap-highlight-color:transparent; }
-  .fsBtn { position:absolute; top:14px; right:16px; z-index:8; background:rgba(255,255,255,.9);
-    border:1px solid var(--line); border-radius:9px; padding:8px 12px; font-size:11px; font-weight:700;
-    letter-spacing:.1em; text-transform:uppercase; color:var(--ink); cursor:pointer; opacity:.35; transition:opacity .2s; }
-  .fsBtn:hover { opacity:1; }
+  .chrome { position:absolute; top:14px; right:16px; z-index:8; display:flex; gap:8px; opacity:.32; transition:opacity .2s; }
+  .chrome:hover { opacity:1; }
+  .chrome button { background:rgba(255,255,255,.92); border:1px solid var(--line); border-radius:9px;
+    padding:8px 12px; font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--ink); cursor:pointer; }
+  .chrome button[aria-pressed="true"] { background:var(--teal); border-color:var(--teal); color:#fff; }
 </style>
 </head>
 <body>
@@ -256,7 +258,7 @@ to accomplish His purposes</h1>
 </section>
 
 <!-- 7 · compare -->
-<section class="slide" data-section="Theme 1 · The Lord inspires people">
+<section class="slide" data-hide="youth" data-section="Theme 1 · The Lord inspires people">
   <div class="content">
     <p class="kicker">Side by side</p>
     <div class="compare">
@@ -275,7 +277,7 @@ to accomplish His purposes</h1>
 </section>
 
 <!-- 8 · discuss -->
-<section class="slide s-discuss" data-section="Theme 1 · The Lord inspires people">
+<section class="slide s-discuss" data-hide="youth" data-section="Theme 1 · The Lord inspires people">
   <div class="grain"></div>
   <div class="content">
     <p class="kicker">Discuss</p>
@@ -285,7 +287,7 @@ to accomplish His purposes</h1>
 </section>
 
 <!-- 9 · document -->
-<section class="slide s-doc" data-section="Theme 1 · The Lord inspires people">
+<section class="slide s-doc" data-hide="youth" data-section="Theme 1 · The Lord inspires people">
   <p class="doc-label">Primary source</p>
   <div class="content">
     <div class="doc">
@@ -293,6 +295,16 @@ to accomplish His purposes</h1>
       <p class="meta-line">Book 11, Chapter 1 — written in the 1st century AD</p>
       <p class="verse small">“This was known to Cyrus by his reading the book which Isaiah left behind him of his prophecies… Accordingly, when Cyrus read this, and admired the Divine power, an earnest desire and ambition seized upon him to fulfill what was so written.”</p>
     </div>
+  </div>
+</section>
+
+<!-- 9b · youth only -->
+<section class="slide s-discuss" data-only="youth" data-section="Theme 1 · The Lord inspires people">
+  <div class="grain"></div>
+  <div class="content">
+    <p class="kicker">Discuss</p>
+    <div class="rule light"></div>
+    <p class="q">Cyrus had never worshipped the God of Israel. So why would God use him?</p>
   </div>
 </section>
 
@@ -333,7 +345,7 @@ to accomplish His purposes</h1>
 </section>
 
 <!-- 13 -->
-<section class="slide s-portrait" data-section="Theme 1 · The Lord inspires people">
+<section class="slide s-portrait" data-hide="youth" data-section="Theme 1 · The Lord inspires people">
   <div class="content tight">
     <div class="who">
       <img class="avatar" src="../assets/portraits/whitney.jpg" alt="" />
@@ -347,7 +359,7 @@ to accomplish His purposes</h1>
 </section>
 
 <!-- 14 -->
-<section class="slide s-portrait" data-section="Theme 1 · The Lord inspires people">
+<section class="slide s-portrait" data-hide="youth" data-section="Theme 1 · The Lord inspires people">
   <div class="content tight">
     <div class="who">
       <img class="avatar" src="../assets/portraits/jfs.jpg" alt="" />
@@ -400,6 +412,16 @@ so that I cannot come down”</h1>
       <p class="meta-line">Sanballat’s accusation, sent unsealed for everyone to read</p>
       <p class="verse small">“It is reported among the heathen, and Gashmu saith it, that thou and the Jews think to rebel: for which cause thou buildest the wall, that thou mayest be their king… and thou hast also appointed prophets to preach of thee at Jerusalem, saying, There is a king in Judah: and now shall it be reported to the king according to these words. Come now therefore, and let us take counsel together.”</p>
     </div>
+  </div>
+</section>
+
+<!-- 18b · youth only -->
+<section class="slide s-discuss" data-only="youth" data-section="Theme 2 · I cannot come down">
+  <div class="grain"></div>
+  <div class="content">
+    <p class="kicker">Discuss</p>
+    <div class="rule light"></div>
+    <p class="q">Sanballat didn’t send that privately. He sent it where everyone could read it. What would that look like today?</p>
   </div>
 </section>
 
@@ -527,8 +549,19 @@ He strengthens our hands</h1>
   </div>
 </section>
 
+<!-- 29b · youth only -->
+<section class="slide" data-only="youth" data-section="Theme 3 · He strengthens our hands">
+  <div class="content tight">
+    <p class="kicker">Let’s try something</p>
+    <h2>Build something
+while we interrupt you</h2>
+    <div class="rule" style="margin-top:clamp(20px,3vh,30px)"></div>
+    <p class="body">One volunteer builds. Everyone else gets to call them away — politely, with good reasons. See how far the tower gets.</p>
+  </div>
+</section>
+
 <!-- 30 · document -->
-<section class="slide s-doc" data-section="Theme 3 · He strengthens our hands">
+<section class="slide s-doc" data-hide="youth" data-section="Theme 3 · He strengthens our hands">
   <p class="doc-label">Primary source</p>
   <div class="content">
     <div class="doc">
@@ -613,16 +646,36 @@ so that I cannot come down.”</h1>
 <div class="bar" id="bar"></div>
 <div class="footer" id="footer"><span class="where" id="where"></span><span id="count"></span></div>
 <div class="nav"><button id="prevZone" aria-label="Previous"></button><button id="nextZone" aria-label="Next"></button></div>
-<button class="fsBtn" id="fsBtn" type="button">Full screen</button>
+<div class="chrome">
+  <button id="trackBtn" type="button" aria-pressed="false" title="Trim the densest slides and swap in shorter questions">Youth</button>
+  <button id="fsBtn" type="button">Full screen</button>
+</div>
 </div>
 <script>
 (() => {
-  const slides = [...document.querySelectorAll('.slide')];
+  const all = [...document.querySelectorAll('.slide')];
   const bar = document.getElementById('bar');
   const footer = document.getElementById('footer');
   const where = document.getElementById('where');
   const count = document.getElementById('count');
+  const trackBtn = document.getElementById('trackBtn');
+
+  const wantsYouth = () =>
+    new URLSearchParams(location.search).get('track') === 'youth' ||
+    localStorage.getItem('cfm-track') === 'youth';
+
+  let track = wantsYouth() ? 'youth' : 'adult';
+  let slides = [];
   let i = 0;
+
+  const buildTrack = () => {
+    slides = all.filter((s) => {
+      if (s.dataset.only && s.dataset.only !== track) return false;
+      if (s.dataset.hide && s.dataset.hide === track) return false;
+      return true;
+    });
+    trackBtn.setAttribute('aria-pressed', String(track === 'youth'));
+  };
 
   const isDark = (s) =>
     s.classList.contains('s-section') ||
@@ -632,7 +685,8 @@ so that I cannot come down.”</h1>
 
   const show = (n) => {
     i = Math.max(0, Math.min(slides.length - 1, n));
-    slides.forEach((s, idx) => s.classList.toggle('active', idx === i));
+    all.forEach((s) => s.classList.remove('active'));
+    slides[i].classList.add('active');
     const s = slides[i];
     bar.style.width = (((i + 1) / slides.length) * 100) + '%';
     bar.classList.toggle('on-dark-bar', isDark(s));
@@ -671,7 +725,15 @@ so that I cannot come down.”</h1>
     else document.exitFullscreen?.();
   };
 
+  trackBtn.onclick = () => {
+    track = track === 'youth' ? 'adult' : 'youth';
+    try { localStorage.setItem('cfm-track', track); } catch (e) { /* file:// with no storage */ }
+    buildTrack();
+    show(0);
+  };
+
   window.addEventListener('hashchange', fromHash);
+  buildTrack();
   fromHash();
 })();
 </script>
