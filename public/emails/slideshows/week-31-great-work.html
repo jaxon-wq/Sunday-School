@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>I Am Doing a Great Work</title>
+<style>
+  :root {
+    --ink:#141b20;
+    --ink-soft:#2b353c;
+    --muted:#66737b;
+    --line:#dfe5e9;
+    --teal:#0b5f78;
+    --teal-deep:#083f4e;
+    --teal-light:#7fb8c9;
+    --sand:#b8893d;
+    --sand-light:#e0bd80;
+    --paper:#f8f6f2;
+    --parchment:#fdf8ec;
+    --parchment-edge:#e6d7b4;
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; overflow:hidden; background:#0b1014; color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased; }
+
+  /* ---------- stage ---------- */
+  .slide { position:absolute; inset:0; display:none; overflow:hidden;
+    background:
+      radial-gradient(90% 70% at 6% 0%, rgba(11,95,120,.07) 0%, rgba(11,95,120,0) 60%),
+      linear-gradient(170deg, #fcfbf9 0%, var(--paper) 48%, #eef2f5 100%); }
+  .slide.active { display:block; }
+  .slide.active .content > * { animation:rise .5s cubic-bezier(.2,.7,.2,1) both; }
+  .slide.active .content > *:nth-child(2) { animation-delay:.06s; }
+  .slide.active .content > *:nth-child(3) { animation-delay:.12s; }
+  .slide.active .content > *:nth-child(4) { animation-delay:.18s; }
+  @keyframes rise { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
+  @media (prefers-reduced-motion:reduce) { .slide.active .content > * { animation:none; } }
+
+  .content { position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center;
+    align-items:flex-start;
+    padding: calc(env(safe-area-inset-top) + clamp(36px,6vh,76px)) clamp(32px,6.5vw,104px) calc(env(safe-area-inset-bottom) + clamp(52px,8vh,88px));
+    max-width:1340px; margin:0 auto; width:100%; }
+  .content.bottom { justify-content:flex-end;
+    padding-bottom: calc(env(safe-area-inset-bottom) + clamp(78px,11vh,124px)); }
+  .content.tight { max-width:1120px; }
+  .slide.s-doc .content { align-items:center; justify-content:center; }
+
+  /* ---------- grain + vignette ---------- */
+  .grain { position:absolute; inset:0; pointer-events:none; opacity:.05; mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E"); }
+
+  /* ---------- typography ---------- */
+  .display { font-family:"Iowan Old Style","Palatino Linotype",Palatino,"New York",Georgia,serif; }
+  h1 { font-family:"Iowan Old Style","Palatino Linotype",Palatino,"New York",Georgia,serif;
+    font-size:clamp(38px,6.4vw,78px); line-height:1.04; margin:0; letter-spacing:-.025em; white-space:pre-line; font-weight:700; }
+  h2 { font-family:"Iowan Old Style","Palatino Linotype",Palatino,"New York",Georgia,serif;
+    font-size:clamp(30px,4.6vw,56px); line-height:1.1; margin:0; letter-spacing:-.022em; white-space:pre-line; font-weight:700; }
+  .kicker { color:var(--teal); font-size:clamp(11px,1.1vw,13px); font-weight:700; letter-spacing:.22em;
+    text-transform:uppercase; margin:0 0 clamp(16px,2.4vh,26px); }
+  .kicker.light { color:var(--sand-light); }
+  .kicker.sand { color:var(--sand); }
+  .rule { width:64px; height:3px; background:var(--teal); border-radius:2px; margin:0 0 clamp(20px,3vh,32px); }
+  .rule.sand { background:var(--sand); }
+  .rule.light { background:var(--sand-light); }
+  .sub { margin:clamp(16px,2.4vh,24px) 0 0; font-size:clamp(15px,1.6vw,20px); color:var(--muted); letter-spacing:.01em; }
+  .sub.light { color:#cfc7ba; }
+  .meta-line { margin:0 0 clamp(16px,2.2vh,22px); color:var(--muted); font-size:clamp(13px,1.35vw,16px); line-height:1.45; }
+  .ref { margin:clamp(22px,3vh,34px) 0 0; color:var(--muted); font-size:clamp(12px,1.15vw,14px);
+    letter-spacing:.16em; text-transform:uppercase; font-weight:700; }
+  .ref.light { color:#b9c3c9; }
+  .note { margin:clamp(18px,2.6vh,28px) 0 0; color:var(--teal); font-size:clamp(16px,1.8vw,22px);
+    font-weight:600; line-height:1.45; max-width:46rem; }
+
+  /* ---------- scripture ---------- */
+  .verse { font-family:"Iowan Old Style","Palatino Linotype",Palatino,"New York",Georgia,serif;
+    font-size:clamp(25px,3.7vw,50px); line-height:1.28; font-style:italic; color:var(--ink); margin:0; letter-spacing:-.01em; }
+  .verse.small { font-size:clamp(20px,2.7vw,36px); line-height:1.36; }
+  .verse.tiny { font-size:clamp(19px,2.3vw,30px); line-height:1.38; }
+  .quotemark { position:absolute; top:clamp(-10px,1vh,20px); left:clamp(12px,3vw,54px);
+    font-family:"Iowan Old Style",Palatino,Georgia,serif; font-size:clamp(180px,26vw,340px);
+    line-height:1; color:var(--teal); opacity:.07; pointer-events:none; user-select:none; }
+
+  /* ---------- section divider ---------- */
+  .slide.s-section { background:radial-gradient(120% 120% at 12% 0%, #0d6c88 0%, var(--teal-deep) 55%, #05303c 100%); }
+  .s-section h1, .s-section .kicker, .s-section .sub { color:#f4efe6; }
+  .s-section .kicker { color:var(--sand-light); }
+  .ghost-num { position:absolute; right:clamp(16px,4vw,80px); bottom:clamp(-30px,-3vh,-8px);
+    font-family:"Iowan Old Style",Palatino,Georgia,serif; font-weight:700;
+    font-size:clamp(260px,38vw,560px); line-height:.8; color:#ffffff; opacity:.085; pointer-events:none; user-select:none; }
+  .chip { display:inline-flex; align-items:center; gap:10px; margin:0 0 clamp(20px,3vh,30px);
+    background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.26); color:#f4efe6;
+    padding:9px 16px; border-radius:999px; font-size:clamp(11px,1.05vw,13px); font-weight:700;
+    letter-spacing:.16em; text-transform:uppercase; }
+
+  /* ---------- imagery ---------- */
+  .hero { position:absolute; inset:0; background-size:cover; background-position:center 32%; transform:scale(1.04); }
+  .hero-walls { background-image:url('../assets/nehemiah-walls-hero.jpg'); }
+  .hero-cylinder { background-image:url('../assets/primary/cyrus-cylinder.jpg'); background-position:center 45%; }
+  .slide.active .hero { animation:drift 16s ease-out both; }
+  @keyframes drift { from { transform:scale(1.04); } to { transform:scale(1.11); } }
+  .veil { position:absolute; inset:0;
+    background:linear-gradient(to top, rgba(8,12,16,.94) 8%, rgba(8,12,16,.55) 45%, rgba(8,12,16,.3) 100%); }
+  .veil.soft { background:linear-gradient(to top, rgba(8,12,16,.9) 12%, rgba(8,12,16,.42) 62%, rgba(8,12,16,.22) 100%); }
+  .veil.full { background:linear-gradient(105deg, rgba(6,10,13,.93) 0%, rgba(6,10,13,.78) 52%, rgba(6,10,13,.5) 100%); }
+  .on-dark h1, .on-dark h2, .on-dark .verse, .on-dark .body { color:#f6f2ea; }
+  .on-dark .sub { color:#cfc7ba; }
+
+  /* ---------- document card ---------- */
+  .slide.s-doc { background:#101a1f; }
+  .doc { position:relative; background:var(--parchment); border-radius:5px;
+    padding:clamp(30px,4.6vw,62px) clamp(28px,4.4vw,64px);
+    max-width:1060px; width:100%; color:#26211a;
+    box-shadow:0 48px 110px rgba(0,0,0,.6), 0 2px 0 rgba(255,255,255,.45) inset;
+    border:1px solid var(--parchment-edge); }
+  .doc::before { content:""; position:absolute; inset:0; border-radius:4px; pointer-events:none;
+    background:linear-gradient(160deg, rgba(255,255,255,.5), rgba(214,190,142,.14) 60%, rgba(176,146,88,.2)); }
+  .doc > * { position:relative; }
+  .doc .seal { margin:0 0 clamp(12px,1.8vh,18px); color:#8a6a2f; font-size:clamp(10px,1.05vw,12px);
+    font-weight:700; letter-spacing:.2em; text-transform:uppercase; display:flex; align-items:center; gap:10px; }
+  .doc .seal::before { content:""; width:26px; height:2px; background:#b8893d; display:block; }
+  .doc .meta-line { color:#7a6647; }
+  .doc .verse { color:#241f18; }
+  .doc-label { position:absolute; top:clamp(22px,4vh,44px); left:0; right:0; text-align:center;
+    color:var(--sand-light); font-size:clamp(10px,1.05vw,12px); font-weight:700; letter-spacing:.28em; text-transform:uppercase; opacity:.85; }
+
+  /* ---------- compare ---------- */
+  .compare { display:grid; grid-template-columns:1fr auto 1fr; gap:clamp(18px,2.4vw,32px);
+    align-items:stretch; width:100%; margin:clamp(6px,1vh,12px) 0 0; }
+  .col { background:#fff; border:1px solid var(--line); border-radius:20px;
+    padding:clamp(26px,3.2vw,42px); min-height:clamp(180px,26vh,280px);
+    box-shadow:0 22px 50px rgba(20,27,32,.09); display:flex; flex-direction:column; justify-content:center; }
+  .col .kicker { margin-bottom:14px; }
+  .col.doc-tint { background:var(--parchment); border-color:var(--parchment-edge); }
+  .col.doc-tint .kicker { color:var(--sand); }
+  .vs { align-self:center; color:var(--muted); font-size:clamp(11px,1.1vw,13px); font-weight:700;
+    letter-spacing:.2em; text-transform:uppercase; }
+  @media (max-width:760px) { .compare { grid-template-columns:1fr; } .vs { justify-self:start; } }
+
+  /* ---------- portrait quote ---------- */
+  .slide.s-portrait { background:
+      radial-gradient(70% 60% at 88% 12%, rgba(184,137,61,.09) 0%, rgba(184,137,61,0) 62%),
+      linear-gradient(180deg, #ffffff 0%, var(--paper) 100%); }
+  .who { display:flex; align-items:center; gap:clamp(14px,1.8vw,22px); margin:0 0 clamp(22px,3.2vh,34px); }
+  .avatar { width:clamp(76px,8.4vw,130px); height:clamp(76px,8.4vw,130px); border-radius:50%; object-fit:cover;
+    border:4px solid #fff; box-shadow:0 14px 34px rgba(20,27,32,.2); flex:none; }
+  .s-portrait .verse { border-left:3px solid var(--sand); padding-left:clamp(18px,2.2vw,30px); }
+  .name { margin:0; font-weight:700; font-size:clamp(15px,1.6vw,20px); letter-spacing:-.01em; }
+  .meta { margin:4px 0 0; color:var(--muted); font-size:clamp(12px,1.25vw,15px); }
+
+  /* ---------- discuss ---------- */
+  .slide.s-discuss { background:radial-gradient(120% 130% at 85% 10%, #1d2a31 0%, #131c21 60%, #0c1317 100%); }
+  .slide.s-discuss::after { content:"?"; position:absolute; right:clamp(8px,3vw,64px); bottom:clamp(-90px,-9vh,-30px);
+    font-family:"Iowan Old Style",Palatino,Georgia,serif; font-weight:700;
+    font-size:clamp(300px,44vw,660px); line-height:.8; color:#ffffff; opacity:.05;
+    pointer-events:none; user-select:none; }
+  .s-discuss .q { color:#f6f2ea; max-width:26ch; }
+  .s-discuss .kicker { color:var(--sand-light); }
+  .q { font-family:"Iowan Old Style","Palatino Linotype",Palatino,"New York",Georgia,serif;
+    font-size:clamp(28px,4.4vw,58px); line-height:1.16; margin:0; letter-spacing:-.02em; font-weight:700; }
+
+  /* ---------- body copy ---------- */
+  .body { font-size:clamp(18px,2.2vw,28px); line-height:1.5; color:var(--ink-soft); margin:0; max-width:44rem; }
+  .body.big { font-family:"Iowan Old Style",Palatino,Georgia,serif; font-size:clamp(22px,3vw,38px); line-height:1.34; }
+
+  /* ---------- chrome ---------- */
+  .bar { position:absolute; top:0; left:0; height:3px; background:linear-gradient(90deg, var(--teal), var(--teal-light));
+    z-index:9; transition:width .35s cubic-bezier(.2,.7,.2,1); }
+  .bar.on-dark-bar { background:linear-gradient(90deg, var(--sand), var(--sand-light)); }
+  .footer { position:absolute; left:clamp(32px,7vw,110px); right:clamp(32px,7vw,110px);
+    bottom:calc(env(safe-area-inset-bottom) + clamp(20px,3vh,34px)); z-index:6;
+    display:flex; justify-content:space-between; align-items:center; gap:16px;
+    font-size:clamp(10px,1.05vw,12px); font-weight:700; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--muted); pointer-events:none; }
+  .footer.light { color:rgba(246,242,234,.6); }
+  .footer .where { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .nav { position:absolute; inset:0; display:flex; z-index:5; }
+  .nav button { flex:1; background:transparent; border:0; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .chrome { position:absolute; top:14px; right:16px; z-index:8; display:flex; gap:8px; opacity:.32; transition:opacity .2s; }
+  .chrome:hover { opacity:1; }
+  .chrome button { background:rgba(255,255,255,.92); border:1px solid var(--line); border-radius:9px;
+    padding:8px 12px; font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--ink); cursor:pointer; }
+  .chrome button[aria-pressed="true"] { background:var(--teal); border-color:var(--teal); color:#fff; }
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+<!-- 1 · cover -->
+<section class="slide" data-section="">
+  <div class="hero hero-walls"></div>
+  <div class="veil"></div>
+  <div class="grain"></div>
+  <div class="content bottom on-dark">
+    <p class="kicker light">Come, Follow Me · Ezra &amp; Nehemiah</p>
+    <h1>“I Am Doing a
+Great Work”</h1>
+    <div class="rule light" style="margin-top:clamp(20px,3vh,30px);margin-bottom:0"></div>
+    <p class="sub light">Ezra 1; 3–7 · Nehemiah 2; 4–6; 8</p>
+  </div>
+</section>
+
+<!-- 2 · theme 1 -->
+<section class="slide s-section" data-section="Theme 1 · The Lord inspires people">
+  <div class="ghost-num">1</div>
+  <div class="grain"></div>
+  <div class="content">
+    <p class="chip">Theme One</p>
+    <h1>The Lord inspires people
+to accomplish His purposes</h1>
+  </div>
+</section>
+
+<!-- 3 -->
+<section class="slide" data-section="Theme 1 · The Lord inspires people">
+  <div class="quotemark">“</div>
+  <div class="content tight">
+    <p class="kicker">Scripture</p>
+    <p class="verse">“…that the word of the Lord by the mouth of Jeremiah might be fulfilled, the Lord stirred up the spirit of Cyrus king of Persia…”</p>
+    <p class="ref">Ezra 1:1</p>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="slide" data-section="Theme 1 · The Lord inspires people">
+  <div class="quotemark">“</div>
+  <div class="content tight">
+    <p class="kicker">Scripture</p>
+    <p class="verse">“That saith of Cyrus, He is my shepherd, and shall perform all my pleasure: even saying to Jerusalem, Thou shalt be built; and to the temple, Thy foundation shall be laid.”</p>
+    <p class="note">Written about 150 years before Cyrus rose to power.</p>
+    <p class="ref">Isaiah 44:28</p>
+  </div>
+</section>
+
+<!-- 5 · cylinder hero -->
+<section class="slide" data-section="Theme 1 · The Lord inspires people">
+  <div class="hero hero-cylinder"></div>
+  <div class="veil soft"></div>
+  <div class="grain"></div>
+  <div class="content bottom on-dark">
+    <p class="kicker light">Primary source</p>
+    <h1>The Cyrus Cylinder</h1>
+    <p class="sub light">c. 539 BC · British Museum · baked clay, inscribed in Akkadian cuneiform</p>
+  </div>
+</section>
+
+<!-- 6 · document -->
+<section class="slide s-doc" data-section="Theme 1 · The Lord inspires people">
+  <p class="doc-label">Primary source</p>
+  <div class="content">
+    <div class="doc">
+      <p class="seal">Cyrus Cylinder · British Museum</p>
+      <p class="meta-line">Cyrus speaking in the first person — translated from the cuneiform</p>
+      <p class="verse small">“I returned to (these) sacred cities… the sanctuaries of which have been ruins for a long time, the images which (used) to live therein and established for them permanent sanctuaries. I (also) gathered all their former inhabitants and returned (to them) their habitations… upon the command of Marduk, the great lord.”</p>
+    </div>
+  </div>
+</section>
+
+<!-- 7 · compare -->
+<section class="slide" data-hide="youth" data-section="Theme 1 · The Lord inspires people">
+  <div class="content">
+    <p class="kicker">Side by side</p>
+    <div class="compare">
+      <div class="col">
+        <p class="kicker">Ezra 1:1</p>
+        <p class="verse tiny">“the Lord stirred up the spirit of Cyrus…”</p>
+      </div>
+      <div class="vs">vs</div>
+      <div class="col doc-tint">
+        <p class="kicker">Cyrus Cylinder</p>
+        <p class="verse tiny">“…upon the command of Marduk, the great lord.”</p>
+      </div>
+    </div>
+    <p class="note">Same king. Same policy of return and rebuilding. Two very different explanations of who stirred him.</p>
+  </div>
+</section>
+
+<!-- 8 · discuss -->
+<section class="slide s-discuss" data-hide="youth" data-section="Theme 1 · The Lord inspires people">
+  <div class="grain"></div>
+  <div class="content">
+    <p class="kicker">Discuss</p>
+    <div class="rule light"></div>
+    <p class="q">What do you notice when you set Ezra and the Cyrus Cylinder side by side?</p>
+  </div>
+</section>
+
+<!-- 9 · document -->
+<section class="slide s-doc" data-hide="youth" data-section="Theme 1 · The Lord inspires people">
+  <p class="doc-label">Primary source</p>
+  <div class="content">
+    <div class="doc">
+      <p class="seal">Josephus · Antiquities of the Jews</p>
+      <p class="meta-line">Book 11, Chapter 1 — written in the 1st century AD</p>
+      <p class="verse small">“This was known to Cyrus by his reading the book which Isaiah left behind him of his prophecies… Accordingly, when Cyrus read this, and admired the Divine power, an earnest desire and ambition seized upon him to fulfill what was so written.”</p>
+    </div>
+  </div>
+</section>
+
+<!-- 9b · youth only -->
+<section class="slide s-discuss" data-only="youth" data-section="Theme 1 · The Lord inspires people">
+  <div class="grain"></div>
+  <div class="content">
+    <p class="kicker">Discuss</p>
+    <div class="rule light"></div>
+    <p class="q">Cyrus had never worshipped the God of Israel. So why would God use him?</p>
+  </div>
+</section>
+
+<!-- 10 · place yourself -->
+<section class="slide" data-section="Theme 1 · The Lord inspires people">
+  <div class="hero hero-walls"></div>
+  <div class="veil full"></div>
+  <div class="grain"></div>
+  <div class="content on-dark">
+    <p class="kicker light">Place yourself there</p>
+    <div class="rule light"></div>
+    <p class="body big">You are a Jew in Babylon. Your temple is ash. Then a Persian king — who does not worship your God — says he has been charged to rebuild the house of the Lord, and he will help pay for it.</p>
+  </div>
+</section>
+
+<!-- 11 · discuss -->
+<section class="slide s-discuss" data-section="Theme 1 · The Lord inspires people">
+  <div class="grain"></div>
+  <div class="content">
+    <p class="kicker">Discuss</p>
+    <div class="rule light"></div>
+    <p class="q">What does Cyrus’s story suggest about how the Lord moves His work in the world?</p>
+  </div>
+</section>
+
+<!-- 12 -->
+<section class="slide s-portrait" data-section="Theme 1 · The Lord inspires people">
+  <div class="content tight">
+    <div class="who">
+      <img class="avatar" src="../assets/portraits/benson.jpg" alt="" />
+      <div>
+        <p class="name">Ezra Taft Benson</p>
+        <p class="meta">April 1972 General Conference</p>
+      </div>
+    </div>
+    <p class="verse small">“God, the Father of us all, uses the men of the earth, especially good men, to accomplish his purposes. It has been true in the past, it is true today, it will be true in the future.”</p>
+  </div>
+</section>
+
+<!-- 13 -->
+<section class="slide s-portrait" data-hide="youth" data-section="Theme 1 · The Lord inspires people">
+  <div class="content tight">
+    <div class="who">
+      <img class="avatar" src="../assets/portraits/whitney.jpg" alt="" />
+      <div>
+        <p class="name">Orson F. Whitney</p>
+        <p class="meta">April 1928</p>
+      </div>
+    </div>
+    <p class="verse small">“God is using more than one people for the accomplishment of His great and marvelous work. The Latter-day Saints cannot do it all. It is too vast, too arduous for any one people.”</p>
+  </div>
+</section>
+
+<!-- 14 -->
+<section class="slide s-portrait" data-hide="youth" data-section="Theme 1 · The Lord inspires people">
+  <div class="content tight">
+    <div class="who">
+      <img class="avatar" src="../assets/portraits/jfs.jpg" alt="" />
+      <div>
+        <p class="name">Joseph Fielding Smith</p>
+        <p class="meta">On the Reformers</p>
+      </div>
+    </div>
+    <p class="verse small">“In preparation for this restoration the Lord raised up noble men, such as Luther, Calvin, Knox, and others whom we call reformers… The work of the reformers was of great importance, but it was a preparatory work.”</p>
+  </div>
+</section>
+
+<!-- 15 · discuss -->
+<section class="slide s-discuss" data-section="Theme 1 · The Lord inspires people">
+  <div class="grain"></div>
+  <div class="content">
+    <p class="kicker">Discuss</p>
+    <div class="rule light"></div>
+    <p class="q">Where have you seen the Lord stir someone — maybe outside the Church — to move His work forward?</p>
+  </div>
+</section>
+
+<!-- 16 · theme 2 -->
+<section class="slide s-section" data-section="Theme 2 · I cannot come down">
+  <div class="ghost-num">2</div>
+  <div class="grain"></div>
+  <div class="content">
+    <p class="chip">Theme Two</p>
+    <h1>“I am doing a great work,
+so that I cannot come down”</h1>
+  </div>
+</section>
+
+<!-- 17 -->
+<section class="slide" data-section="Theme 2 · I cannot come down">
+  <div class="quotemark">“</div>
+  <div class="content tight">
+    <p class="kicker">Scripture</p>
+    <p class="verse">“Sanballat and Geshem sent unto me, saying, Come, let us meet together in some one of the villages in the plain of Ono. But they thought to do me mischief.”</p>
+    <p class="ref">Nehemiah 6:2</p>
+  </div>
+</section>
+
+<!-- 18 · document -->
+<section class="slide s-doc" data-section="Theme 2 · I cannot come down">
+  <p class="doc-label">Primary source</p>
+  <div class="content">
+    <div class="doc">
+      <p class="seal">Open letter · Nehemiah 6:6–7</p>
+      <p class="meta-line">Sanballat’s accusation, sent unsealed for everyone to read</p>
+      <p class="verse small">“It is reported among the heathen, and Gashmu saith it, that thou and the Jews think to rebel: for which cause thou buildest the wall, that thou mayest be their king… and thou hast also appointed prophets to preach of thee at Jerusalem, saying, There is a king in Judah: and now shall it be reported to the king according to these words. Come now therefore, and let us take counsel together.”</p>
+    </div>
+  </div>
+</section>
+
+<!-- 18b · youth only -->
+<section class="slide s-discuss" data-only="youth" data-section="Theme 2 · I cannot come down">
+  <div class="grain"></div>
+  <div class="content">
+    <p class="kicker">Discuss</p>
+    <div class="rule light"></div>
+    <p class="q">Sanballat didn’t send that privately. He sent it where everyone could read it. What would that look like today?</p>
+  </div>
+</section>
+
+<!-- 19 -->
+<section class="slide" data-section="Theme 2 · I cannot come down">
+  <div class="quotemark">“</div>
+  <div class="content tight">
+    <p class="kicker">His answer</p>
+    <p class="verse">“And I sent messengers unto them, saying, I am doing a great work, so that I cannot come down: why should the work cease, whilst I leave it, and come down to you?”</p>
+    <p class="ref">Nehemiah 6:3</p>
+  </div>
+</section>
+
+<!-- 20 -->
+<section class="slide" data-section="Theme 2 · I cannot come down">
+  <div class="content tight">
+    <p class="kicker">Four times</p>
+    <h2>They asked him
+to come down</h2>
+    <div class="rule" style="margin-top:clamp(20px,3vh,30px)"></div>
+    <p class="body">Not once. Four times. The invitation sounded reasonable — even peacemaking. Nehemiah knew it was a trap.</p>
+  </div>
+</section>
+
+<!-- 21 · place yourself -->
+<section class="slide" data-section="Theme 2 · I cannot come down">
+  <div class="hero hero-walls"></div>
+  <div class="veil full"></div>
+  <div class="grain"></div>
+  <div class="content on-dark">
+    <p class="kicker light">Place yourself there</p>
+    <div class="rule light"></div>
+    <p class="body big">Your work is unfinished. Critics are loud. Then comes an invitation that sounds mature: leave the wall for a moment. Sit down. Talk it out. Be reasonable.</p>
+  </div>
+</section>
+
+<!-- 22 · discuss -->
+<section class="slide s-discuss" data-section="Theme 2 · I cannot come down">
+  <div class="grain"></div>
+  <div class="content">
+    <p class="kicker">Discuss</p>
+    <div class="rule light"></div>
+    <p class="q">How do you tell the difference between a wise pause… and a distraction dressed up as wisdom?</p>
+  </div>
+</section>
+
+<!-- 23 -->
+<section class="slide s-portrait" data-section="Theme 2 · I cannot come down">
+  <div class="content tight">
+    <div class="who">
+      <img class="avatar" src="../assets/portraits/uchtdorf.jpg" alt="" />
+      <div>
+        <p class="name">Dieter F. Uchtdorf</p>
+        <p class="meta">April 2009 General Conference</p>
+      </div>
+    </div>
+    <p class="verse small">“Nehemiah refused to allow distractions to prevent him from doing what the Lord wanted him to do.”</p>
+  </div>
+</section>
+
+<!-- 24 -->
+<section class="slide s-portrait" data-section="Theme 2 · I cannot come down">
+  <div class="content tight">
+    <div class="who">
+      <img class="avatar" src="../assets/portraits/uchtdorf.jpg" alt="" />
+      <div>
+        <p class="name">Dieter F. Uchtdorf</p>
+        <p class="meta">April 2009 General Conference</p>
+      </div>
+    </div>
+    <p class="verse small">“Our Heavenly Father seeks those who refuse to allow the trivial to hinder them in their pursuit of the eternal.”</p>
+  </div>
+</section>
+
+<!-- 25 · discuss -->
+<section class="slide s-discuss" data-section="Theme 2 · I cannot come down">
+  <div class="grain"></div>
+  <div class="content">
+    <p class="kicker">Discuss</p>
+    <div class="rule light"></div>
+    <p class="q">What keeps pulling you down off your wall — and what would staying up cost you?</p>
+  </div>
+</section>
+
+<!-- 26 · theme 3 -->
+<section class="slide s-section" data-section="Theme 3 · He strengthens our hands">
+  <div class="ghost-num">3</div>
+  <div class="grain"></div>
+  <div class="content">
+    <p class="chip">Theme Three</p>
+    <h1>When God gives a work,
+He strengthens our hands</h1>
+  </div>
+</section>
+
+<!-- 27 · document -->
+<section class="slide s-doc" data-section="Theme 3 · He strengthens our hands">
+  <p class="doc-label">Primary source</p>
+  <div class="content">
+    <div class="doc">
+      <p class="seal">Nehemiah’s memoir · 6:9</p>
+      <p class="meta-line">A first-person prayer, written into the record</p>
+      <p class="verse small">“For they all made us afraid, saying, Their hands shall be weakened from the work, that it be not done. Now therefore, O God, strengthen my hands.”</p>
+    </div>
+  </div>
+</section>
+
+<!-- 28 -->
+<section class="slide" data-section="Theme 3 · He strengthens our hands">
+  <div class="quotemark">“</div>
+  <div class="content tight">
+    <p class="kicker">Scripture</p>
+    <p class="verse">“So built we the wall; and all the wall was joined together unto the half thereof: for the people had a mind to work.”</p>
+    <p class="ref">Nehemiah 4:6</p>
+  </div>
+</section>
+
+<!-- 29 -->
+<section class="slide" data-section="Theme 3 · He strengthens our hands">
+  <div class="quotemark">“</div>
+  <div class="content tight">
+    <p class="kicker">Scripture</p>
+    <p class="verse">“…And the king granted me, according to the good hand of my God upon me.”</p>
+    <p class="ref">Nehemiah 2:8</p>
+  </div>
+</section>
+
+<!-- 29b · youth only -->
+<section class="slide" data-only="youth" data-section="Theme 3 · He strengthens our hands">
+  <div class="content tight">
+    <p class="kicker">Let’s try something</p>
+    <h2>Build something
+while we interrupt you</h2>
+    <div class="rule" style="margin-top:clamp(20px,3vh,30px)"></div>
+    <p class="body">One volunteer builds. Everyone else gets to call them away — politely, with good reasons. See how far the tower gets.</p>
+  </div>
+</section>
+
+<!-- 30 · document -->
+<section class="slide s-doc" data-hide="youth" data-section="Theme 3 · He strengthens our hands">
+  <p class="doc-label">Primary source</p>
+  <div class="content">
+    <div class="doc">
+      <p class="seal">Ezra’s own words · 7:27–28</p>
+      <p class="meta-line">First-person record of a work he did not begin</p>
+      <p class="verse small">“Blessed be the Lord God of our fathers, which hath put such a thing as this in the king’s heart… And I was strengthened as the hand of the Lord my God was upon me, and I gathered together out of Israel chief men to go up with me.”</p>
+    </div>
+  </div>
+</section>
+
+<!-- 31 · place yourself -->
+<section class="slide" data-section="Theme 3 · He strengthens our hands">
+  <div class="hero hero-walls"></div>
+  <div class="veil full"></div>
+  <div class="grain"></div>
+  <div class="content on-dark">
+    <p class="kicker light">Place yourself there</p>
+    <div class="rule light"></div>
+    <p class="body big">The critics’ goal is specific: weaken your hands. You can feel the fear they want you to feel. What do you ask God for in that exact moment?</p>
+  </div>
+</section>
+
+<!-- 32 -->
+<section class="slide s-portrait" data-section="Theme 3 · He strengthens our hands">
+  <div class="content tight">
+    <div class="who">
+      <img class="avatar" src="../assets/portraits/lee.jpg" alt="" />
+      <div>
+        <p class="name">Harold B. Lee</p>
+        <p class="meta">As taught by Thomas S. Monson</p>
+      </div>
+    </div>
+    <p class="verse">“Whom the Lord calls, the Lord qualifies.”</p>
+  </div>
+</section>
+
+<!-- 33 -->
+<section class="slide s-portrait" data-section="Theme 3 · He strengthens our hands">
+  <div class="content tight">
+    <div class="who">
+      <img class="avatar" src="../assets/portraits/monson.jpg" alt="" />
+      <div>
+        <p class="name">Thomas S. Monson</p>
+        <p class="meta">October 2008 General Conference</p>
+      </div>
+    </div>
+    <p class="verse">“If we are on the Lord’s errand, we are entitled to the Lord’s help.”</p>
+  </div>
+</section>
+
+<!-- 34 -->
+<section class="slide" data-section="Theme 3 · He strengthens our hands">
+  <div class="quotemark">“</div>
+  <div class="content tight">
+    <p class="kicker">The promise</p>
+    <p class="verse">“I will go before your face. I will be on your right hand and on your left, and my Spirit shall be in your hearts, and mine angels round about you, to bear you up.”</p>
+    <p class="ref">Doctrine and Covenants 84:88</p>
+  </div>
+</section>
+
+<!-- 35 · discuss -->
+<section class="slide s-discuss" data-section="Theme 3 · He strengthens our hands">
+  <div class="grain"></div>
+  <div class="content">
+    <p class="kicker">Discuss</p>
+    <div class="rule light"></div>
+    <p class="q">When has the Lord strengthened your hands for a work that felt bigger than you?</p>
+  </div>
+</section>
+
+<!-- 36 · close -->
+<section class="slide s-section" data-section="">
+  <div class="grain"></div>
+  <div class="content">
+    <div class="rule light"></div>
+    <h1>“I am doing a great work,
+so that I cannot come down.”</h1>
+    <p class="sub light" style="letter-spacing:.16em;text-transform:uppercase;font-weight:700;font-size:clamp(12px,1.15vw,14px);">Nehemiah 6:3</p>
+  </div>
+</section>
+
+<div class="bar" id="bar"></div>
+<div class="footer" id="footer"><span class="where" id="where"></span><span id="count"></span></div>
+<div class="nav"><button id="prevZone" aria-label="Previous"></button><button id="nextZone" aria-label="Next"></button></div>
+<div class="chrome">
+  <button id="trackBtn" type="button" aria-pressed="false" title="Trim the densest slides and swap in shorter questions">Youth</button>
+  <button id="fsBtn" type="button">Full screen</button>
+</div>
+</div>
+<script>
+(() => {
+  const all = [...document.querySelectorAll('.slide')];
+  const bar = document.getElementById('bar');
+  const footer = document.getElementById('footer');
+  const where = document.getElementById('where');
+  const count = document.getElementById('count');
+  const trackBtn = document.getElementById('trackBtn');
+
+  const wantsYouth = () =>
+    new URLSearchParams(location.search).get('track') === 'youth' ||
+    localStorage.getItem('cfm-track') === 'youth';
+
+  let track = wantsYouth() ? 'youth' : 'adult';
+  let slides = [];
+  let i = 0;
+
+  const buildTrack = () => {
+    slides = all.filter((s) => {
+      if (s.dataset.only && s.dataset.only !== track) return false;
+      if (s.dataset.hide && s.dataset.hide === track) return false;
+      return true;
+    });
+    trackBtn.setAttribute('aria-pressed', String(track === 'youth'));
+  };
+
+  const isDark = (s) =>
+    s.classList.contains('s-section') ||
+    s.classList.contains('s-discuss') ||
+    s.classList.contains('s-doc') ||
+    !!s.querySelector('.veil');
+
+  const show = (n) => {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    all.forEach((s) => s.classList.remove('active'));
+    slides[i].classList.add('active');
+    const s = slides[i];
+    bar.style.width = (((i + 1) / slides.length) * 100) + '%';
+    bar.classList.toggle('on-dark-bar', isDark(s));
+    footer.classList.toggle('light', isDark(s));
+    where.textContent = s.dataset.section || '';
+    count.textContent = (i + 1) + ' / ' + slides.length;
+    history.replaceState(null, '', '#' + (i + 1));
+  };
+
+  const fromHash = () => {
+    const n = parseInt((location.hash || '#1').slice(1), 10);
+    show(Number.isFinite(n) ? n - 1 : 0);
+  };
+
+  document.getElementById('prevZone').onclick = (e) => { e.stopPropagation(); show(i - 1); };
+  document.getElementById('nextZone').onclick = (e) => { e.stopPropagation(); show(i + 1); };
+
+  window.addEventListener('keydown', (e) => {
+    if (['ArrowRight', 'PageDown'].includes(e.code) || e.key === ' ') { e.preventDefault(); show(i + 1); }
+    if (['ArrowLeft', 'PageUp'].includes(e.code)) { e.preventDefault(); show(i - 1); }
+    if (e.key === 'Home') { e.preventDefault(); show(0); }
+    if (e.key === 'End') { e.preventDefault(); show(slides.length - 1); }
+  });
+
+  let x0 = null;
+  window.addEventListener('touchstart', (e) => { x0 = e.changedTouches[0].clientX; }, { passive: true });
+  window.addEventListener('touchend', (e) => {
+    if (x0 == null) return;
+    const dx = e.changedTouches[0].clientX - x0;
+    if (Math.abs(dx) > 40) show(i + (dx < 0 ? 1 : -1));
+    x0 = null;
+  }, { passive: true });
+
+  document.getElementById('fsBtn').onclick = () => {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+    else document.exitFullscreen?.();
+  };
+
+  trackBtn.onclick = () => {
+    track = track === 'youth' ? 'adult' : 'youth';
+    try { localStorage.setItem('cfm-track', track); } catch (e) { /* file:// with no storage */ }
+    buildTrack();
+    show(0);
+  };
+
+  window.addEventListener('hashchange', fromHash);
+  buildTrack();
+  fromHash();
+})();
+</script>
+</body>
+</html>

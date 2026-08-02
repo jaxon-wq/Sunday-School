@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Do Non-Members Get Saved?</title>
+<style>
+  :root {
+    --ink:#141b20;
+    --ink-soft:#2b353c;
+    --muted:#66737b;
+    --line:#dfe5e9;
+    --teal:#0b5f78;
+    --teal-deep:#083f4e;
+    --teal-light:#7fb8c9;
+    --sand:#b8893d;
+    --sand-light:#e0bd80;
+    --paper:#f8f6f2;
+    --parchment:#fdf8ec;
+    --parchment-edge:#e6d7b4;
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; overflow:hidden; background:#0b1014; color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased; }
+
+  .slide { position:absolute; inset:0; display:none; overflow:hidden;
+    background:
+      radial-gradient(90% 70% at 6% 0%, rgba(11,95,120,.07) 0%, rgba(11,95,120,0) 60%),
+      linear-gradient(170deg, #fcfbf9 0%, var(--paper) 48%, #eef2f5 100%); }
+  .slide.active { display:block; }
+  .slide.active .content > * { animation:rise .5s cubic-bezier(.2,.7,.2,1) both; }
+  .slide.active .content > *:nth-child(2) { animation-delay:.06s; }
+  .slide.active .content > *:nth-child(3) { animation-delay:.12s; }
+  .slide.active .content > *:nth-child(4) { animation-delay:.18s; }
+  @keyframes rise { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
+  @media (prefers-reduced-motion:reduce) { .slide.active .content > * { animation:none; } }
+
+  .content { position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center;
+    align-items:flex-start;
+    padding: calc(env(safe-area-inset-top) + clamp(36px,6vh,76px)) clamp(32px,6.5vw,104px) calc(env(safe-area-inset-bottom) + clamp(52px,8vh,88px));
+    max-width:1340px; margin:0 auto; width:100%; }
+  .content.bottom { justify-content:flex-end;
+    padding-bottom: calc(env(safe-area-inset-bottom) + clamp(78px,11vh,124px)); }
+  .content.tight { max-width:1120px; }
+  .slide.s-doc .content { align-items:center; justify-content:center; }
+
+  .grain { position:absolute; inset:0; pointer-events:none; opacity:.05; mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E"); }
+
+  .display { font-family:"Iowan Old Style","Palatino Linotype",Palatino,"New York",Georgia,serif; }
+  h1 { font-family:"Iowan Old Style","Palatino Linotype",Palatino,"New York",Georgia,serif;
+    font-size:clamp(38px,6.4vw,78px); line-height:1.04; margin:0; letter-spacing:-.025em; white-space:pre-line; font-weight:700; }
+  h2 { font-family:"Iowan Old Style","Palatino Linotype",Palatino,"New York",Georgia,serif;
+    font-size:clamp(30px,4.6vw,56px); line-height:1.1; margin:0; letter-spacing:-.022em; white-space:pre-line; font-weight:700; }
+  .kicker { color:var(--teal); font-size:clamp(11px,1.1vw,13px); font-weight:700; letter-spacing:.22em;
+    text-transform:uppercase; margin:0 0 clamp(16px,2.4vh,26px); }
+  .kicker.light { color:var(--sand-light); }
+  .rule { width:64px; height:3px; background:var(--teal); border-radius:2px; margin:0 0 clamp(20px,3vh,32px); }
+  .rule.light { background:var(--sand-light); }
+  .sub { margin:clamp(16px,2.4vh,24px) 0 0; font-size:clamp(15px,1.6vw,20px); color:var(--muted); letter-spacing:.01em; }
+  .sub.light { color:#cfc7ba; }
+  .meta-line { margin:0 0 clamp(16px,2.2vh,22px); color:var(--muted); font-size:clamp(13px,1.35vw,16px); line-height:1.45; }
+  .ref { margin:clamp(22px,3vh,34px) 0 0; color:var(--muted); font-size:clamp(12px,1.15vw,14px);
+    letter-spacing:.16em; text-transform:uppercase; font-weight:700; }
+  .ref.light { color:#b9c3c9; }
+  .note { margin:clamp(18px,2.6vh,28px) 0 0; color:var(--teal); font-size:clamp(16px,1.8vw,22px);
+    font-weight:600; line-height:1.45; max-width:46rem; }
+
+  .verse { font-family:"Iowan Old Style","Palatino Linotype",Palatino,"New York",Georgia,serif;
+    font-size:clamp(25px,3.7vw,50px); line-height:1.28; font-style:italic; color:var(--ink); margin:0; letter-spacing:-.01em; }
+  .verse.small { font-size:clamp(20px,2.7vw,36px); line-height:1.36; }
+  .quotemark { position:absolute; top:clamp(-10px,1vh,20px); left:clamp(12px,3vw,54px);
+    font-family:"Iowan Old Style",Palatino,Georgia,serif; font-size:clamp(180px,26vw,340px);
+    line-height:1; color:var(--teal); opacity:.07; pointer-events:none; user-select:none; }
+
+  .slide.s-section { background:radial-gradient(120% 120% at 12% 0%, #0d6c88 0%, var(--teal-deep) 55%, #05303c 100%); }
+  .s-section h1, .s-section .kicker, .s-section .sub { color:#f4efe6; }
+  .s-section .kicker { color:var(--sand-light); }
+  .s-section .sub { color:#c9d6da; }
+  .ghost-word { position:absolute; left:0; right:0; bottom:clamp(-26px,-2vh,-6px); text-align:center;
+    font-family:"Iowan Old Style",Palatino,Georgia,serif; font-weight:700;
+    font-size:clamp(120px,17vw,260px); line-height:.8; color:#ffffff; opacity:.06; pointer-events:none; user-select:none;
+    letter-spacing:.02em; white-space:nowrap; }
+  .chip { display:inline-flex; align-items:center; gap:10px; margin:0 0 clamp(20px,3vh,30px);
+    background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.26); color:#f4efe6;
+    padding:9px 16px; border-radius:999px; font-size:clamp(11px,1.05vw,13px); font-weight:700;
+    letter-spacing:.16em; text-transform:uppercase; }
+
+  .hero { position:absolute; inset:0; background-size:cover; background-position:center 32%; transform:scale(1.04); }
+  .slide.active .hero { animation:drift 16s ease-out both; }
+  @keyframes drift { from { transform:scale(1.04); } to { transform:scale(1.11); } }
+  .hero-belshazzar { background-image:url('../assets/lesson-courses-15-16/belshazzar.jpg'); background-position:center 30%; }
+  .hero-cylinder { background-image:url('../assets/primary/cyrus-cylinder.jpg'); background-position:center 45%; }
+  .hero-temple { background-image:url('../assets/lesson-courses-15-16/st-george-temple.jpg'); background-position:center 40%; }
+  .hero-doniphan { background-image:url('../assets/lesson-courses-15-16/doniphan.jpg');
+    background-position:center 20%; background-size:contain; background-repeat:no-repeat;
+    background-color:#10181d; filter:saturate(.7) brightness(.92); }
+  .veil { position:absolute; inset:0;
+    background:linear-gradient(to top, rgba(8,12,16,.94) 8%, rgba(8,12,16,.55) 45%, rgba(8,12,16,.3) 100%); }
+  .veil.soft { background:linear-gradient(to top, rgba(8,12,16,.9) 12%, rgba(8,12,16,.42) 62%, rgba(8,12,16,.22) 100%); }
+  .veil.full { background:linear-gradient(105deg, rgba(6,10,13,.93) 0%, rgba(6,10,13,.78) 52%, rgba(6,10,13,.5) 100%); }
+  .on-dark h1, .on-dark h2, .on-dark .verse, .on-dark .body { color:#f6f2ea; }
+  .on-dark .sub { color:#cfc7ba; }
+
+  .slide.s-doc { background:#101a1f; }
+  .doc { position:relative; background:var(--parchment); border-radius:5px;
+    padding:clamp(30px,4.6vw,62px) clamp(28px,4.4vw,64px);
+    max-width:1060px; width:100%; color:#26211a;
+    box-shadow:0 48px 110px rgba(0,0,0,.6), 0 2px 0 rgba(255,255,255,.45) inset;
+    border:1px solid var(--parchment-edge); }
+  .doc::before { content:""; position:absolute; inset:0; border-radius:5px; pointer-events:none;
+    background:linear-gradient(160deg, rgba(255,255,255,.5), rgba(214,190,142,.14) 60%, rgba(176,146,88,.2)); }
+  .doc > * { position:relative; }
+  .doc .seal { margin:0 0 clamp(12px,1.8vh,18px); color:#8a6a2f; font-size:clamp(10px,1.05vw,12px);
+    font-weight:700; letter-spacing:.2em; text-transform:uppercase; display:flex; align-items:center; gap:10px; }
+  .doc .seal::before { content:""; width:26px; height:2px; background:#b8893d; display:block; }
+  .doc .meta-line { color:#7a6647; }
+  .doc .verse { color:#241f18; }
+  .doc-label { position:absolute; top:clamp(22px,4vh,44px); left:0; right:0; text-align:center;
+    color:var(--sand-light); font-size:clamp(10px,1.05vw,12px); font-weight:700; letter-spacing:.28em; text-transform:uppercase; opacity:.85; }
+
+  .slide.s-portrait { background:
+      radial-gradient(70% 60% at 88% 12%, rgba(184,137,61,.09) 0%, rgba(184,137,61,0) 62%),
+      linear-gradient(180deg, #ffffff 0%, var(--paper) 100%); }
+  .who { display:flex; align-items:center; gap:clamp(14px,1.8vw,22px); margin:0 0 clamp(22px,3.2vh,34px); }
+  .avatar { width:clamp(76px,8.4vw,130px); height:clamp(76px,8.4vw,130px); border-radius:50%; object-fit:cover;
+    border:4px solid #fff; box-shadow:0 14px 34px rgba(20,27,32,.2); flex:none; }
+  .who.on-dark-who .avatar { border-color:rgba(255,255,255,.85); }
+  .name { margin:0; font-weight:700; font-size:clamp(15px,1.6vw,20px); letter-spacing:-.01em; }
+  .meta { margin:4px 0 0; color:var(--muted); font-size:clamp(12px,1.25vw,15px); }
+  .who.on-dark-who .name { color:#f6f2ea; }
+  .who.on-dark-who .meta { color:#b9c3c9; }
+  .s-portrait .verse { border-left:3px solid var(--sand); padding-left:clamp(18px,2.2vw,30px); }
+
+  .slide.s-discuss { background:radial-gradient(120% 130% at 85% 10%, #1d2a31 0%, #131c21 60%, #0c1317 100%); }
+  .slide.s-discuss::after { content:"?"; position:absolute; right:clamp(8px,3vw,64px); bottom:clamp(-90px,-9vh,-30px);
+    font-family:"Iowan Old Style",Palatino,Georgia,serif; font-weight:700;
+    font-size:clamp(300px,44vw,660px); line-height:.8; color:#ffffff; opacity:.05;
+    pointer-events:none; user-select:none; }
+  .s-discuss .q { color:#f6f2ea; max-width:26ch; }
+  .s-discuss .kicker { color:var(--sand-light); }
+  .q { font-family:"Iowan Old Style","Palatino Linotype",Palatino,"New York",Georgia,serif;
+    font-size:clamp(28px,4.4vw,58px); line-height:1.16; margin:0; letter-spacing:-.02em; font-weight:700; }
+  .votes { display:flex; gap:clamp(10px,1.4vw,18px); margin-top:clamp(26px,4vh,40px); flex-wrap:wrap; }
+  .votes span { border:1px solid rgba(255,255,255,.32); color:#e8e2d6; border-radius:999px;
+    padding:12px 22px; font-size:clamp(12px,1.25vw,15px); font-weight:700; letter-spacing:.14em; text-transform:uppercase; }
+
+  .body { font-size:clamp(18px,2.2vw,28px); line-height:1.5; color:var(--ink-soft); margin:0; max-width:44rem; }
+  .body.big { font-family:"Iowan Old Style",Palatino,Georgia,serif; font-size:clamp(22px,3vw,38px); line-height:1.34; }
+
+  .bar { position:absolute; top:0; left:0; height:3px; background:linear-gradient(90deg, var(--teal), var(--teal-light));
+    z-index:9; transition:width .35s cubic-bezier(.2,.7,.2,1); }
+  .bar.on-dark-bar { background:linear-gradient(90deg, var(--sand), var(--sand-light)); }
+  .footer { position:absolute; left:clamp(32px,6.5vw,104px); right:clamp(32px,6.5vw,104px);
+    bottom:calc(env(safe-area-inset-bottom) + clamp(20px,3vh,34px)); z-index:6;
+    display:flex; justify-content:space-between; align-items:center; gap:16px;
+    font-size:clamp(10px,1.05vw,12px); font-weight:700; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--muted); pointer-events:none; }
+  .footer.light { color:rgba(246,242,234,.6); }
+  .footer .where { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .nav { position:absolute; inset:0; display:flex; z-index:5; }
+  .nav button { flex:1; background:transparent; border:0; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .fsBtn { position:absolute; top:14px; right:16px; z-index:8; background:rgba(255,255,255,.9);
+    border:1px solid var(--line); border-radius:9px; padding:8px 12px; font-size:11px; font-weight:700;
+    letter-spacing:.1em; text-transform:uppercase; color:var(--ink); cursor:pointer; opacity:.32; transition:opacity .2s; }
+  .fsBtn:hover { opacity:1; }
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+<!-- 1 · the question -->
+<section class="slide s-discuss" data-section="">
+  <div class="grain"></div>
+  <div class="content">
+    <p class="kicker">A question before we start</p>
+    <div class="rule light"></div>
+    <p class="q">Do non-members get saved?</p>
+    <div class="votes"><span>Yes</span><span>No</span><span>It’s complicated</span></div>
+  </div>
+</section>
+
+<!-- 2 · the follow-up -->
+<section class="slide s-discuss" data-section="">
+  <div class="grain"></div>
+  <div class="content">
+    <p class="kicker">Hold your answer. Second question —</p>
+    <div class="rule light"></div>
+    <p class="q">Then why does the Lord keep trusting non-members with His work?</p>
+  </div>
+</section>
+
+<!-- 3 · story one title -->
+<section class="slide" data-section="Story one · The king named before he was born">
+  <div class="hero hero-belshazzar"></div>
+  <div class="veil"></div>
+  <div class="grain"></div>
+  <div class="content bottom on-dark">
+    <p class="kicker light">Story one</p>
+    <h1>The king God named
+before he was born</h1>
+    <p class="sub light">Babylon, 539 BC</p>
+  </div>
+</section>
+
+<!-- 4 · named 150 years early -->
+<section class="slide" data-section="Story one · The king named before he was born">
+  <div class="quotemark">“</div>
+  <div class="content tight">
+    <p class="kicker">Scripture</p>
+    <p class="verse">“That saith of Cyrus, He is my shepherd, and shall perform all my pleasure: even saying to Jerusalem, Thou shalt be built; and to the temple, Thy foundation shall be laid.”</p>
+    <p class="note">Isaiah wrote this man’s name about 150 years before he was born.</p>
+    <p class="ref">Isaiah 44:28</p>
+  </div>
+</section>
+
+<!-- 6 · mashiach -->
+<section class="slide s-section" data-section="Story one · The king named before he was born">
+  <div class="ghost-word">MASHIACH</div>
+  <div class="grain"></div>
+  <div class="content">
+    <p class="chip">God’s title for this pagan king</p>
+    <h1>“Mine anointed”</h1>
+    <p class="sub">The Hebrew word is <em>mashiach</em> — Messiah. Exactly one non-Israelite in the entire Old Testament gets that word.</p>
+  </div>
+</section>
+
+<!-- 7 · though thou hast not known me -->
+<section class="slide" data-section="Story one · The king named before he was born">
+  <div class="quotemark">“</div>
+  <div class="content tight">
+    <p class="kicker">Scripture</p>
+    <p class="verse">“Thus saith the Lord to his anointed, to Cyrus, whose right hand I have holden… I have called thee by thy name… though thou hast not known me.”</p>
+    <p class="note">God says it Himself: this man doesn’t know Me. He sent the captives home and helped pay for the temple anyway.</p>
+    <p class="ref">Isaiah 45:1, 4</p>
+  </div>
+</section>
+
+<!-- 8 · story two title -->
+<section class="slide" data-section="Story two · Nine o’clock tomorrow morning">
+  <div class="hero hero-doniphan"></div>
+  <div class="veil soft"></div>
+  <div class="grain"></div>
+  <div class="content bottom on-dark">
+    <p class="kicker light">Story two</p>
+    <h1>Nine o’clock
+tomorrow morning</h1>
+    <p class="sub light">Far West, Missouri · November 1838</p>
+  </div>
+</section>
+
+<!-- 9 · the order -->
+<section class="slide s-doc" data-section="Story two · Nine o’clock tomorrow morning">
+  <p class="doc-label">The order</p>
+  <div class="content">
+    <div class="doc">
+      <p class="seal">Maj. Gen. Samuel Lucas · Missouri militia</p>
+      <p class="meta-line">To Brigadier General Alexander Doniphan — November 1838</p>
+      <p class="verse small">“Sir: You will take Joseph Smith and the other prisoners into the public square of Far West, and shoot them at 9 o’clock to-morrow morning.”</p>
+    </div>
+  </div>
+</section>
+
+<!-- 10 · the refusal -->
+<section class="slide s-doc" data-section="Story two · Nine o’clock tomorrow morning">
+  <p class="doc-label">The reply</p>
+  <div class="content">
+    <div class="doc">
+      <p class="seal">Brig. Gen. Alexander Doniphan — not a member. Never joined.</p>
+      <p class="meta-line">His answer to a direct order from his commanding officer</p>
+      <p class="verse small">“It is cold-blooded murder. I will not obey your order. My brigade shall march for Liberty to-morrow morning, at 8 o’clock; and if you execute these men, I will hold you responsible before an earthly tribunal, so help me God.”</p>
+    </div>
+  </div>
+</section>
+
+<!-- 11 · counterfactual -->
+<section class="slide" data-section="Story two · Nine o’clock tomorrow morning">
+  <div class="content tight">
+    <p class="kicker">Nobody was shot</p>
+    <h2>Run the timeline
+without him</h2>
+    <div class="rule" style="margin-top:clamp(20px,3vh,30px)"></div>
+    <p class="body">No Liberty Jail letters. No Nauvoo. No temple. The Lord trusted the prophet’s life to a man who thought the Church was strange — and trusted him to say no to his own general.</p>
+  </div>
+</section>
+
+<!-- 12 · story three title -->
+<section class="slide s-section" data-section="Story three · The spy who stopped a war">
+  <div class="ghost-word">OSBORNE</div>
+  <div class="grain"></div>
+  <div class="content">
+    <p class="chip">Story three</p>
+    <h1>The spy who
+stopped a war</h1>
+    <p class="sub">Winter, 1857 — the U.S. Army is marching on Utah.</p>
+  </div>
+</section>
+
+<!-- 13 · kane -->
+<section class="slide s-portrait" data-section="Story three · The spy who stopped a war">
+  <div class="content tight">
+    <div class="who">
+      <img class="avatar" src="../assets/lesson-courses-15-16/kane.jpg" alt="" />
+      <div>
+        <p class="name">Thomas L. Kane</p>
+        <p class="meta">Philadelphia lawyer · not a member · never joined</p>
+      </div>
+    </div>
+    <p class="verse small">He crossed the country in winter under a fake name — “Dr. Osborne” — walked into Brigham Young’s office, then into the Army’s camp, and talked both sides out of a war. He spent thirty years and his family fortune defending a church he never joined.</p>
+    <p class="note">There’s a county in Utah named after him. Most members have never heard his name.</p>
+  </div>
+</section>
+
+<!-- 14 · pivot -->
+<section class="slide s-discuss" data-section="">
+  <div class="grain"></div>
+  <div class="content">
+    <p class="kicker">So He clearly uses them</p>
+    <div class="rule light"></div>
+    <p class="q">But that’s not what you asked. You asked if He saves them.</p>
+  </div>
+</section>
+
+<!-- 15 · the visitors title -->
+<section class="slide" data-section="The visitors · St. George, 1877">
+  <div class="hero hero-temple"></div>
+  <div class="veil"></div>
+  <div class="grain"></div>
+  <div class="content bottom on-dark">
+    <p class="kicker light">The visitors</p>
+    <h1>St. George, 1877</h1>
+    <p class="sub light">Wilford Woodruff, temple president, said the signers of the Declaration of Independence appeared to him — with a complaint.</p>
+  </div>
+</section>
+
+<!-- 16 · woodruff account -->
+<section class="slide s-doc" data-section="The visitors · St. George, 1877">
+  <p class="doc-label">As Wilford Woodruff told it</p>
+  <div class="content">
+    <div class="doc">
+      <p class="seal">Wilford Woodruff · September 1877</p>
+      <p class="meta-line">Recounting what the founders said to him in the St. George Temple</p>
+      <p class="verse small">“We laid the foundation of the government you now enjoy, and we never apostatized from it, but we remained true to it and were faithful to God… why have you not redeemed us?”</p>
+      <p class="meta-line" style="margin:clamp(16px,2.4vh,22px) 0 0;">Days later, he went to the font and was baptized on their behalf.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 17 · alvin -->
+<section class="slide" data-section="The visitors · St. George, 1877">
+  <div class="quotemark">“</div>
+  <div class="content tight">
+    <p class="kicker">The doctrine — given as a story about Joseph’s brother Alvin, who died before the Church existed</p>
+    <p class="verse small">“All who have died without a knowledge of this gospel, who would have received it if they had been permitted to tarry, shall be heirs of the celestial kingdom of God.”</p>
+    <p class="ref">Doctrine and Covenants 137:7</p>
+  </div>
+</section>
+
+<!-- 18 · re-vote -->
+<section class="slide s-discuss" data-section="">
+  <div class="grain"></div>
+  <div class="content">
+    <p class="kicker">Same question. Vote again.</p>
+    <div class="rule light"></div>
+    <p class="q">Do non-members get saved?</p>
+    <div class="votes"><span>Yes</span><span>No</span><span>It’s complicated</span></div>
+  </div>
+</section>
+
+<!-- 19 · close -->
+<section class="slide s-section" data-section="">
+  <div class="grain"></div>
+  <div class="content">
+    <div class="rule light"></div>
+    <h1>God uses His outsiders —
+then He comes back for them.</h1>
+    <p class="sub">And the last chapter runs through a font, written by people your age.</p>
+  </div>
+</section>
+
+<div class="bar" id="bar"></div>
+<div class="footer" id="footer"><span class="where" id="where"></span><span id="count"></span></div>
+<div class="nav"><button id="prevZone" aria-label="Previous"></button><button id="nextZone" aria-label="Next"></button></div>
+<button class="fsBtn" id="fsBtn" type="button">Full screen</button>
+</div>
+<script>
+(() => {
+  const slides = [...document.querySelectorAll('.slide')];
+  const bar = document.getElementById('bar');
+  const footer = document.getElementById('footer');
+  const where = document.getElementById('where');
+  const count = document.getElementById('count');
+  let i = 0;
+
+  const isDark = (s) =>
+    s.classList.contains('s-section') ||
+    s.classList.contains('s-discuss') ||
+    s.classList.contains('s-doc') ||
+    !!s.querySelector('.veil');
+
+  const show = (n) => {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach((s, idx) => s.classList.toggle('active', idx === i));
+    const s = slides[i];
+    bar.style.width = (((i + 1) / slides.length) * 100) + '%';
+    bar.classList.toggle('on-dark-bar', isDark(s));
+    footer.classList.toggle('light', isDark(s));
+    where.textContent = s.dataset.section || '';
+    count.textContent = (i + 1) + ' / ' + slides.length;
+    history.replaceState(null, '', '#' + (i + 1));
+  };
+
+  const fromHash = () => {
+    const n = parseInt((location.hash || '#1').slice(1), 10);
+    show(Number.isFinite(n) ? n - 1 : 0);
+  };
+
+  document.getElementById('prevZone').onclick = (e) => { e.stopPropagation(); show(i - 1); };
+  document.getElementById('nextZone').onclick = (e) => { e.stopPropagation(); show(i + 1); };
+
+  window.addEventListener('keydown', (e) => {
+    if (['ArrowRight', 'PageDown'].includes(e.code) || e.key === ' ') { e.preventDefault(); show(i + 1); }
+    if (['ArrowLeft', 'PageUp'].includes(e.code)) { e.preventDefault(); show(i - 1); }
+    if (e.key === 'Home') { e.preventDefault(); show(0); }
+    if (e.key === 'End') { e.preventDefault(); show(slides.length - 1); }
+  });
+
+  let x0 = null;
+  window.addEventListener('touchstart', (e) => { x0 = e.changedTouches[0].clientX; }, { passive: true });
+  window.addEventListener('touchend', (e) => {
+    if (x0 == null) return;
+    const dx = e.changedTouches[0].clientX - x0;
+    if (Math.abs(dx) > 40) show(i + (dx < 0 ? 1 : -1));
+    x0 = null;
+  }, { passive: true });
+
+  document.getElementById('fsBtn').onclick = () => {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+    else document.exitFullscreen?.();
+  };
+
+  window.addEventListener('hashchange', fromHash);
+  fromHash();
+})();
+</script>
+</body>
+</html>
