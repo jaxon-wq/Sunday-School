@@ -1,11 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useRef, useState } from "react";
 import {
   applyLcrImport,
   isLcrOrganizationsPaste,
   parseLcrOrganizationsText,
 } from "@/lib/lcr-import";
+import { PLACES, formatRoom, placeFor, roomDetail } from "@/lib/rooms";
 import {
   Candidate,
   PIPELINE_STAGES,
@@ -372,7 +374,17 @@ export default function TeachersPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Classes */}
         <section className="space-y-4">
-          <h2 className="font-serif text-xl font-bold">Classes</h2>
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="font-serif text-xl font-bold">Classes</h2>
+            <Link href="/rooms" className="text-sm font-semibold text-primary hover:underline">
+              Where they meet
+            </Link>
+          </div>
+          <datalist id="building-rooms">
+            {PLACES.map((p) => (
+              <option key={p.entry} value={p.entry} label={p.where} />
+            ))}
+          </datalist>
           <form
             onSubmit={addClass}
             className="flex flex-wrap gap-2 rounded-lg border border-line bg-surface p-3"
@@ -387,7 +399,8 @@ export default function TeachersPage() {
               value={classRoom}
               onChange={(e) => setClassRoom(e.target.value)}
               placeholder="Room"
-              className={`w-24 bg-white ${inputCls}`}
+              list="building-rooms"
+              className={`w-36 bg-white ${inputCls}`}
             />
             <button
               type="submit"
@@ -400,20 +413,46 @@ export default function TeachersPage() {
           {data.classes.length === 0 && (
             <p className="text-sm text-ink-3">No classes yet.</p>
           )}
-          {data.classes.map((cls) => (
+          {data.classes.map((cls) => {
+            const place = placeFor(cls.room);
+            return (
             <div
               key={cls.id}
               className="rounded-lg border border-line bg-white p-4"
             >
-              <div className="flex items-center justify-between">
-                <p className="font-semibold">
-                  {cls.name}
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-semibold">{cls.name}</p>
+                  <label className="mt-2 flex items-center gap-2 text-xs text-ink-3">
+                    <span className="shrink-0">Room</span>
+                    <input
+                      key={`${cls.id}:${cls.room ?? ""}`}
+                      defaultValue={cls.room ?? ""}
+                      list="building-rooms"
+                      aria-label={`Room for ${cls.name}`}
+                      placeholder="107, Gym…"
+                      onBlur={(e) => {
+                        const room = e.target.value.trim();
+                        if (room === (cls.room ?? "")) return;
+                        update((d) => ({
+                          ...d,
+                          classes: d.classes.map((c) =>
+                            c.id === cls.id
+                              ? { ...c, room: room || undefined }
+                              : c
+                          ),
+                        }));
+                      }}
+                      className="w-40 rounded-md border border-line bg-white px-2 py-1 text-sm text-ink"
+                    />
+                  </label>
                   {cls.room && (
-                    <span className="ml-2 text-xs font-normal text-ink-3">
-                      Room {cls.room}
-                    </span>
+                    <p className="mt-1 text-xs text-ink-3">
+                      {formatRoom(cls.room)}
+                      {place ? ` · ${roomDetail(cls.room)}` : ""}
+                    </p>
                   )}
-                </p>
+                </div>
                 <button
                   onClick={() => removeClass(cls.id)}
                   className="text-xs text-ink-3 hover:text-danger"
@@ -463,7 +502,8 @@ export default function TeachersPage() {
                 </select>
               </div>
             </div>
-          ))}
+            );
+          })}
         </section>
 
         {/* Teachers */}
