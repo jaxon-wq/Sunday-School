@@ -5,6 +5,7 @@ import Link from "next/link";
 import LessonArt, { artworkFor } from "@/components/LessonArt";
 import { kitFor, kitMessage } from "@/lib/kits";
 import { LESSONS, formatSunday, lessonUrl, occurrenceLabel, parseISODate } from "@/lib/lessons";
+import { doorName } from "@/lib/rooms";
 import {
   CARE_THRESHOLD,
   NEW_SCHEDULE_START,
@@ -257,8 +258,11 @@ export default function Dashboard() {
                     >
                       <span className="min-w-0 text-ink-2">
                         {cls.name}
-                        {cls.room && (
-                          <span className="text-ink-3"> · {cls.room}</span>
+                        {doorName(cls.room) && (
+                          <span className="text-ink-3">
+                            {" "}
+                            · {doorName(cls.room)}
+                          </span>
                         )}
                       </span>
                       <span
@@ -279,6 +283,14 @@ export default function Dashboard() {
                   );
                 })}
               </ul>
+            )}
+            {data.classes.length > 0 && (
+              <Link
+                href="/rooms"
+                className="mt-3 inline-block text-sm font-semibold text-primary hover:underline"
+              >
+                Where each class meets
+              </Link>
             )}
             <div className="mt-5 flex flex-wrap gap-3">
               <Link

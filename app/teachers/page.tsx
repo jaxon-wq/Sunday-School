@@ -1,11 +1,13 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Link from "next/link";
 import {
   applyLcrImport,
   isLcrOrganizationsPaste,
   parseLcrOrganizationsText,
 } from "@/lib/lcr-import";
+import { placeFor } from "@/lib/rooms";
 import {
   Candidate,
   PIPELINE_STAGES,
@@ -17,6 +19,26 @@ import {
 
 const inputCls =
   "rounded-md border border-line px-3 py-1.5 text-sm placeholder:text-ink-3";
+
+function RoomField({
+  value,
+  onSave,
+}: {
+  value: string;
+  onSave: (room: string) => void;
+}) {
+  const [text, setText] = useState(value);
+  return (
+    <input
+      value={text}
+      onChange={(e) => setText(e.target.value)}
+      onBlur={() => onSave(text)}
+      placeholder="Door sign"
+      aria-label="Room"
+      className="w-40 rounded-md border border-line bg-white px-2 py-1 text-xs"
+    />
+  );
+}
 
 export default function TeachersPage() {
   const { data, update } = useAppData();
@@ -46,6 +68,15 @@ export default function TeachersPage() {
     }));
     setClassName("");
     setClassRoom("");
+  }
+
+  function setRoom(classId: string, room: string) {
+    update((d) => ({
+      ...d,
+      classes: d.classes.map((c) =>
+        c.id === classId ? { ...c, room: room.trim() || undefined } : c
+      ),
+    }));
   }
 
   function removeClass(id: string) {
@@ -372,7 +403,15 @@ export default function TeachersPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Classes */}
         <section className="space-y-4">
-          <h2 className="font-serif text-xl font-bold">Classes</h2>
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="font-serif text-xl font-bold">Classes</h2>
+            <Link
+              href="/rooms"
+              className="text-sm font-semibold text-primary hover:underline"
+            >
+              Where we meet
+            </Link>
+          </div>
           <form
             onSubmit={addClass}
             className="flex flex-wrap gap-2 rounded-lg border border-line bg-surface p-3"
@@ -405,15 +444,24 @@ export default function TeachersPage() {
               key={cls.id}
               className="rounded-lg border border-line bg-white p-4"
             >
-              <div className="flex items-center justify-between">
-                <p className="font-semibold">
-                  {cls.name}
-                  {cls.room && (
-                    <span className="ml-2 text-xs font-normal text-ink-3">
-                      Room {cls.room}
-                    </span>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-semibold">{cls.name}</p>
+                  <label className="mt-2 flex items-center gap-2 text-xs text-ink-2">
+                    Room
+                    <RoomField
+                      key={cls.room ?? ""}
+                      value={cls.room ?? ""}
+                      onSave={(room) => setRoom(cls.id, room)}
+                    />
+                  </label>
+                  {cls.room && !placeFor(cls.room).known && (
+                    <p className="mt-1 max-w-sm text-xs text-ink-3">
+                      {placeFor(cls.room).where ||
+                        "Not a door sign in this building."}
+                    </p>
                   )}
-                </p>
+                </div>
                 <button
                   onClick={() => removeClass(cls.id)}
                   className="text-xs text-ink-3 hover:text-danger"
