@@ -304,6 +304,13 @@ export default function RoomsPage() {
             />
             Blank lines if roster is empty
           </label>
+          <a
+            href="/sunday-school-room-signs.pdf"
+            download="Sunday-School-room-signs.pdf"
+            className="rounded-md border border-line-2 bg-white px-4 py-1.5 text-sm font-semibold text-ink hover:bg-surface"
+          >
+            Download PDF
+          </a>
           <button
             type="button"
             onClick={() => window.print()}
