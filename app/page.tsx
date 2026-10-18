@@ -5,6 +5,7 @@ import Link from "next/link";
 import LessonArt, { artworkFor } from "@/components/LessonArt";
 import { kitFor, kitMessage } from "@/lib/kits";
 import { LESSONS, formatSunday, lessonUrl, occurrenceLabel, parseISODate } from "@/lib/lessons";
+import { formatRoom, placeFor, roomDetail } from "@/lib/rooms";
 import {
   CARE_THRESHOLD,
   NEW_SCHEDULE_START,
@@ -250,22 +251,28 @@ export default function Dashboard() {
               <ul className="mt-5 divide-y divide-line border-t border-line">
                 {data.classes.map((cls) => {
                   const eff = effectiveTeacherLabel(data, next.sunday, cls);
+                  const place = placeFor(cls.room);
                   return (
                     <li
                       key={cls.id}
-                      className="flex items-center justify-between gap-4 py-2.5 text-sm"
+                      className="flex flex-col gap-0.5 py-2.5 text-sm sm:flex-row sm:items-start sm:justify-between sm:gap-4"
                     >
-                      <span className="min-w-0 text-ink-2">
-                        {cls.name}
+                      <span className="min-w-0">
+                        <span className="text-ink-2">{cls.name}</span>
                         {cls.room && (
-                          <span className="text-ink-3"> · {cls.room}</span>
+                          <span className="mt-0.5 block text-xs text-ink-3">
+                            <span className="font-semibold text-ink">
+                              {formatRoom(cls.room)}
+                            </span>
+                            {place && <> · {roomDetail(cls.room)}</>}
+                          </span>
                         )}
                       </span>
                       <span
                         className={
                           eff.missing
-                            ? "font-semibold text-warn"
-                            : "font-medium text-ink"
+                            ? "font-semibold text-warn sm:shrink-0 sm:text-right"
+                            : "font-medium text-ink sm:shrink-0 sm:text-right"
                         }
                       >
                         {eff.label}
@@ -279,6 +286,14 @@ export default function Dashboard() {
                   );
                 })}
               </ul>
+            )}
+            {data.classes.length > 0 && (
+              <Link
+                href="/rooms"
+                className="mt-4 inline-block text-sm font-semibold text-primary hover:underline"
+              >
+                Where each class meets
+              </Link>
             )}
             <div className="mt-5 flex flex-wrap gap-3">
               <Link

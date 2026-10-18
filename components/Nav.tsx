@@ -15,6 +15,16 @@ const LINKS: { href: string; label: string; icon: React.ReactNode }[] = [
     ),
   },
   {
+    href: "/rooms",
+    label: "Rooms",
+    icon: (
+      <>
+        <path d="M6 3.5h12a1 1 0 0 1 1 1V21H5V4.5a1 1 0 0 1 1-1Z" />
+        <path d="M14.5 12.2h.01" />
+      </>
+    ),
+  },
+  {
     href: "/schedule",
     label: "Schedule",
     icon: (

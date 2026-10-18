@@ -3,6 +3,7 @@
 import Link from "next/link";
 import LessonArt from "@/components/LessonArt";
 import { LESSONS, formatSunday, occurrenceLabel, parseISODate } from "@/lib/lessons";
+import { formatRoom } from "@/lib/rooms";
 import {
   NEW_SCHEDULE_START,
   effectiveTeacherLabel,
@@ -113,7 +114,10 @@ export default function MonthPage() {
                               {eff.isSubstitute && " (substitute)"}
                             </span>
                             {cls.room && (
-                              <span className="text-ink-3"> · Room {cls.room}</span>
+                              <span className="text-ink-3">
+                                {" "}
+                                · {formatRoom(cls.room)}
+                              </span>
                             )}
                           </li>
                         );
