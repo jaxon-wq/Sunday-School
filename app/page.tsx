@@ -289,7 +289,7 @@ export default function Dashboard() {
                 href="/rooms"
                 className="mt-3 inline-block text-sm font-semibold text-primary hover:underline"
               >
-                Where each class meets
+                Room signs &amp; where each class meets
               </Link>
             )}
             <div className="mt-5 flex flex-wrap gap-3">

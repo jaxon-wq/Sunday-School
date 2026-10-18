@@ -7,7 +7,7 @@ import {
   isLcrOrganizationsPaste,
   parseLcrOrganizationsText,
 } from "@/lib/lcr-import";
-import { placeFor } from "@/lib/rooms";
+import { isYouthClass, parseRosterText, placeFor } from "@/lib/rooms";
 import {
   Candidate,
   PIPELINE_STAGES,
@@ -37,6 +37,82 @@ function RoomField({
       aria-label="Room"
       className="w-40 rounded-md border border-line bg-white px-2 py-1 text-xs"
     />
+  );
+}
+
+function RosterEditor({
+  roster,
+  onSave,
+}: {
+  roster: string[];
+  onSave: (next: string[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState(roster.join("\n"));
+
+  function save() {
+    const parsed = parseRosterText(draft);
+    onSave(parsed);
+    setDraft(parsed.join("\n"));
+    setOpen(false);
+  }
+
+  return (
+    <div className="mt-3 border-t border-line pt-2.5">
+      <div className="flex items-center justify-between gap-2 text-xs">
+        <span className="font-medium text-ink-2">
+          Door sign roster
+          {roster.length > 0 ? ` (${roster.length})` : ""}
+        </span>
+        <button
+          type="button"
+          onClick={() => {
+            setDraft(roster.join("\n"));
+            setOpen((v) => !v);
+          }}
+          className="font-semibold text-primary hover:underline"
+        >
+          {open
+            ? "Cancel"
+            : roster.length > 0
+              ? "Edit roster"
+              : "+ Add youth roster"}
+        </button>
+      </div>
+      {roster.length > 0 && !open && (
+        <p className="mt-1 text-xs text-ink-2">{roster.join(", ")}</p>
+      )}
+      {open && (
+        <div className="mt-2 space-y-2 rounded-md border border-line bg-surface p-2.5">
+          <p className="text-xs text-ink-2">
+            One name per line, or paste from an LCR class roll.
+          </p>
+          <textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            rows={5}
+            placeholder={"Ethan McAllister\nEmma Larsen\nNoah Mendenhall"}
+            className="w-full rounded-md border border-line bg-white px-2.5 py-1.5 text-xs text-ink placeholder:text-ink-3"
+          />
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="rounded-md border border-line-2 bg-white px-2.5 py-1 text-xs font-semibold text-ink hover:bg-surface"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={save}
+              className="rounded-md bg-primary px-3 py-1 text-xs font-semibold text-white hover:bg-primary-dark"
+            >
+              Save roster
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -75,6 +151,17 @@ export default function TeachersPage() {
       ...d,
       classes: d.classes.map((c) =>
         c.id === classId ? { ...c, room: room.trim() || undefined } : c
+      ),
+    }));
+  }
+
+  function setRoster(classId: string, roster: string[]) {
+    update((d) => ({
+      ...d,
+      classes: d.classes.map((c) =>
+        c.id === classId
+          ? { ...c, roster: roster.length > 0 ? roster : undefined }
+          : c
       ),
     }));
   }
@@ -409,7 +496,7 @@ export default function TeachersPage() {
               href="/rooms"
               className="text-sm font-semibold text-primary hover:underline"
             >
-              Where we meet
+              Room signs &amp; locations
             </Link>
           </div>
           <form
@@ -456,8 +543,9 @@ export default function TeachersPage() {
                     />
                   </label>
                   {cls.room && !placeFor(cls.room).known && (
-                    <p className="mt-1 max-w-sm text-xs text-ink-3">
-                      {placeFor(cls.room).where ||
+                    <p className="mt-1 max-w-sm text-xs text-warn">
+                      {placeFor(cls.room).note ||
+                        placeFor(cls.room).where ||
                         "Not a door sign in this building."}
                     </p>
                   )}
@@ -510,6 +598,12 @@ export default function TeachersPage() {
                     ))}
                 </select>
               </div>
+              {isYouthClass(cls.name, cls.roster) && (
+                <RosterEditor
+                  roster={cls.roster ?? []}
+                  onSave={(roster) => setRoster(cls.id, roster)}
+                />
+              )}
             </div>
           ))}
         </section>
