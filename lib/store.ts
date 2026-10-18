@@ -34,6 +34,8 @@ export type SSClass = {
   name: string;
   room?: string;
   teacherIds: string[];
+  /** Optional class member list (used on youth classroom door signs). */
+  roster?: string[];
 };
 
 // A per-Sunday, per-class change: a substitute covering that day

@@ -182,7 +182,12 @@ export function applyLcrImport(data: AppData, parsed: LcrImportResult): AppData 
           : p.phone,
     })),
     teachers: parsed.teachers,
-    classes: parsed.classes,
+    classes: parsed.classes.map((cls) => {
+      const prev = data.classes.find(
+        (old) => old.name.toLowerCase() === cls.name.toLowerCase()
+      );
+      return prev?.roster?.length ? { ...cls, roster: prev.roster } : cls;
+    }),
     // drop overrides that pointed at old class/teacher ids
     overrides: [],
   };
