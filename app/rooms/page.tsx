@@ -30,8 +30,8 @@ export default function RoomsPage() {
             Where we meet
           </h1>
           <p className="mt-1 max-w-xl text-sm text-ink-2">
-            Each class and the door to follow in this building. A saved room
-            that is not a door sign is called out.
+            Each class and the room number on the building plan. A number that
+            is not a classroom is called out.
           </p>
         </div>
         <button
@@ -79,7 +79,13 @@ export default function RoomsPage() {
                   )}
                 </div>
                 {place.where && (
-                  <p className="mt-1 text-sm text-ink-2">{place.where}</p>
+                  <p
+                    className={`mt-1 text-sm ${
+                      place.known ? "text-ink-2" : "font-medium text-warn"
+                    }`}
+                  >
+                    {place.where}
+                  </p>
                 )}
                 {!place.known && cls.room && !place.where && (
                   <p className="mt-1 text-sm text-ink-3">
